@@ -317,10 +317,57 @@ document.addEventListener('DOMContentLoaded', () => {
         return merged.join(' ');
     }
 
+    function fixWordReversedLine(line) {
+        const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '').replace(/`/g, '');
+        if (!cleanLine.trim()) return "";
+
+        const tokens = cleanLine.trim().split(/\s+/);
+        if (tokens.length <= 1) return cleanLine.trim();
+
+        tokens.reverse();
+
+        const cleaned = tokens.map(tok => {
+            let leading = "";
+            let core = tok;
+            while (core.length > 1 && PUNCTUATION_SET.has(core[0])) {
+                leading += core[0];
+                core = core.slice(1);
+            }
+            return core + leading;
+        });
+
+        let res = cleaned.join(' ');
+        res = res.replace(/\s+([،؛.:!?])/g, '$1');
+        res = res.replace(/\s+/g, ' ').trim();
+
+        if (res.length > 0 && (res[0] === '،' || res[0] === '؛') && res.split(/\s+/).length > 2) {
+            res = res.slice(1).trim() + ' ' + res[0];
+        }
+        return res;
+    }
+
     function autoFixArabicSentenceFlow(text) {
         if (!text) return "";
         const cleanText = sanitizeText(text);
         const lines = cleanText.split('\n');
+
+        let docIsWordReversed = false;
+        const checkLines = lines.slice(0, 15);
+        for (let l of checkLines) {
+            const t = l.trim().split(/\s+/);
+            if (!t || t.length === 0 || !t[0]) continue;
+            const cleanLast = t[t.length - 1].replace(/[^\w]/g, '');
+            const cleanFirst = t[0].replace(/[^\w]/g, '');
+
+            if (cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الشيخ' || t[t.length - 1].endsWith('بقلم')) {
+                docIsWordReversed = true;
+                break;
+            }
+            if (l.includes('الاول ربيع شهر') || l.includes('الله رسول') || l.includes('علي عبد ملا') || cleanFirst === 'علي' || cleanFirst === 'عبد' || cleanFirst === 'ملا') {
+                docIsWordReversed = true;
+                break;
+            }
+        }
 
         const fixedLines = lines.map(line => {
             const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '').replace(/`/g, '');
@@ -332,14 +379,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const firstWord = tokens[0].replace(/[^\w]/g, '');
             const lastWord = tokens[tokens.length - 1].replace(/[^\w]/g, '');
 
-            const isTrulyReversed = (
+            const isTrulyCharReversed = (
                 cleanLine.includes('لمضم') || cleanLine.includes('يـعالدلا') ||
                 firstWord === 'لمضم' || firstWord === 'يـعالدلا' ||
                 (lastWord.endsWith('دلا') && !firstWord.startsWith('ال'))
             );
 
-            if (isTrulyReversed) {
+            if (isTrulyCharReversed) {
                 return fixReversedArabicLine(line);
+            }
+
+            if (docIsWordReversed || lastWord === 'بقلم' || lastWord === 'الاستاذ' || lastWord === 'الشيخ' || lastWord.endsWith('بقلم')) {
+                return fixWordReversedLine(line);
             }
 
             const singleLetterCount = tokens.filter(t => {

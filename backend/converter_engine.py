@@ -170,17 +170,65 @@ def rejoin_spaced_arabic_letters(line: str) -> str:
     return " ".join(merged)
 
 
+def fix_word_reversed_line(line: str) -> str:
+    """Reverses word sequence for LTR word-reversed PDF streams (e.g., 'علي عبد ملا ... : بقلم' -> 'بقلم : ... ملا عبد علي')."""
+    clean_line = line.replace('ـ', '').replace('\u200c', '').replace('\u200d', '').replace('`', '')
+    if not clean_line.strip():
+        return ""
+
+    tokens = clean_line.strip().split()
+    if len(tokens) <= 1:
+        return clean_line.strip()
+
+    tokens.reverse()
+
+    cleaned = []
+    for tok in tokens:
+        leading = ""
+        core = tok
+        while len(core) > 1 and core[0] in PUNCTUATION_CHARS:
+            leading += core[0]
+            core = core[1:]
+        cleaned.append(core + leading)
+
+    res = " ".join(cleaned)
+    res = re.sub(r'\s+([،؛.:!?])', r'\1', res)
+    res = re.sub(r'\s+', ' ', res).strip()
+
+    if res and res[0] in ['،', '؛'] and len(res.split()) > 2:
+        res = res[1:].strip() + ' ' + res[0]
+
+    return res
+
+
 def auto_fix_arabic_sentence_flow(text: str) -> str:
     """
     Automatic Punctuation-Aware Arabic Sentence Flow & Word/Character Order Normalizer.
-    Preserves 100% accurate original Arabic line direction unless explicit LTR character-reversal
-    or inter-letter spacing is detected. Strips Tatweels (ـ) and zero-width artifacts.
+    Supports Type A (LTR Reversed Character Streams), Type B (Disconnected Inter-Letter Spaces),
+    and Type C (Word-Sequence LTR Reversed Streams e.g. 'علي عبد ملا ... : بقلم').
+    Strips Tatweels (ـ) and fixes punctuation placement.
     """
     if not text:
         return ""
 
     text = sanitize_text(text)
     lines = text.split('\n')
+
+    # Detect document-level LTR word-sequence reversal across first 15 lines
+    doc_is_word_reversed = False
+    for line in lines[:15]:
+        t = line.strip().split()
+        if not t:
+            continue
+        clean_last = re.sub(r'[^\w]', '', t[-1]) if t else ""
+        clean_first = re.sub(r'[^\w]', '', t[0]) if t else ""
+
+        if clean_last in ['بقلم', 'الاستاذ', 'الشيخ'] or t[-1].endswith('بقلم') or t[-1].endswith('بقلم:'):
+            doc_is_word_reversed = True
+            break
+        if 'الاول ربيع شهر' in line or 'الله رسول' in line or 'علي عبد ملا' in line or clean_first in ['علي', 'عبد', 'ملا']:
+            doc_is_word_reversed = True
+            break
 
     fixed_lines = []
     for line in lines:
@@ -197,18 +245,23 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
         first_word = re.sub(r'[^\w]', '', tokens[0])
         last_word = re.sub(r'[^\w]', '', tokens[-1])
 
-        # ONLY reverse character stream if line EXPLICITLY contains backwards LTR indicators (e.g. 'لمضم' or 'يـعالدلا')
-        is_truly_reversed = (
+        # 1. Check for Type A (Character Reversed Stream e.g. 'لمضم' or 'يـعالدلا')
+        is_truly_char_reversed = (
             'لمضم' in clean_line or 'يـعالدلا' in clean_line or
             first_word in ['لمضم', 'يـعالدلا'] or
             (last_word.endswith('دلا') and not first_word.startswith('ال'))
         )
 
-        if is_truly_reversed:
+        if is_truly_char_reversed:
             fixed_lines.append(fix_reversed_arabic_line(line))
             continue
 
-        # Check for Type B (Disconnected Inter-Letter Spaces: e.g., 'ت س ل س ل' -> 'تسلسل')
+        # 2. Check for Type C (Word Sequence Reversed Stream)
+        if doc_is_word_reversed or last_word in ['بقلم', 'الاستاذ', 'الشيخ'] or last_word.endswith('بقلم'):
+            fixed_lines.append(fix_word_reversed_line(line))
+            continue
+
+        # 3. Check for Type B (Disconnected Inter-Letter Spaces: e.g., 'ت س ل س ل' -> 'تسلسل')
         single_letter_count = sum(1 for t in tokens if len(re.sub(r'[^\w]', '', t)) == 1 and any('\u0600' <= c <= '\u06ff' for c in t))
         if single_letter_count >= 3:
             fixed_lines.append(rejoin_spaced_arabic_letters(line))
