@@ -48,12 +48,14 @@ class TextEditor {
 
     setFont(fontName) {
         if (!this.output) return;
-        if (fontName === 'Scheherazade New') {
-            this.output.style.fontFamily = "'Scheherazade New', serif";
+        if (fontName === 'Amiri') {
+            this.output.style.fontFamily = "'Amiri', 'Traditional Arabic', serif";
+        } else if (fontName === 'Scheherazade New') {
+            this.output.style.fontFamily = "'Scheherazade New', 'Amiri', serif";
         } else if (fontName === 'Arial') {
             this.output.style.fontFamily = "Arial, sans-serif";
         } else {
-            this.output.style.fontFamily = `'${fontName}', 'Amiri', serif`;
+            this.output.style.fontFamily = `'${fontName}', 'Amiri', 'Scheherazade New', serif`;
         }
     }
 

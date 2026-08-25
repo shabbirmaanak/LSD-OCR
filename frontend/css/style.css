@@ -51,11 +51,13 @@ html, body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Force strict Right-to-Left alignment for text areas, input fields, and editors */
-textarea, input, select {
+/* Force strict Right-to-Left alignment & cursive letter joining for text areas, input fields, and editors */
+textarea, input, select, #input-editor, #output-editor {
     direction: rtl !important;
     text-align: right !important;
-    unicode-bidi: plaintext !important;
+    unicode-bidi: isolate !important;
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
 }
 
 /* Enable OpenType Feature Ligatures for Lisan al Dawat & Arabic Fonts */
@@ -65,12 +67,6 @@ textarea, input, select, .font-amiri, .font-scheherazade, #input-editor, #output
     text-rendering: optimizeLegibility !important;
     -webkit-font-smoothing: antialiased !important;
     -moz-osx-font-smoothing: grayscale !important;
-}
-
-#input-editor, #output-editor {
-    direction: rtl !important;
-    text-align: right !important;
-    unicode-bidi: plaintext !important;
 }
 
 .font-amiri {
