@@ -477,9 +477,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 let extractedText = data.original_text || "";
                 let convertedText = data.converted_text || "";
                 
-                editor.setInputText(extractedText);
+                let fixedInput = autoFixArabicSentenceFlow(extractedText);
+                editor.setInputText(fixedInput);
+                
                 if (convertedText) {
-                    editor.setOutputText(convertedText);
+                    let fixedOutput = autoFixArabicSentenceFlow(convertedText);
+                    editor.setOutputText(fixedOutput);
                     editor.setStats(data.replacements_count || 0);
                 } else {
                     performLiveConversion();
