@@ -26,7 +26,9 @@ class RuleManager {
             "ee": "پ",
             "pp": "چ",
             "qq": "ٹ",
-            "ww": "ں"
+            "ww": "ں",
+            "T": "ے",
+            "t": "ے"
         };
 
         this.init();
