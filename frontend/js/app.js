@@ -198,19 +198,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function sanitizeText(text) {
+        if (!text) return "";
+        return text.replace(/[\r\u200e\u200f\ufeff\u202a-\u202e\xa0]/g, '');
+    }
+
     function autoFixArabicSentenceFlow(text) {
         if (!text) return "";
-        const lines = text.split('\n');
+        const cleanText = sanitizeText(text);
+        const lines = cleanText.split('\n');
+        
+        let docIsLtrStream = false;
+        const checkLines = lines.slice(0, 15);
+        for (let l of checkLines) {
+            const t = l.trim().split(/\s+/);
+            if (!t || t.length === 0 || !t[0]) continue;
+            const cleanLast = t[t.length - 1].replace(/[^\w]/g, '');
+            const cleanFirst = t[0].replace(/[^\w]/g, '');
+            
+            if (cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' || t[t.length - 1].endsWith('بقلم')) {
+                docIsLtrStream = true;
+                break;
+            }
+            if ((cleanFirst === 'علي' || cleanFirst === 'عبد' || cleanFirst === 'ملا') && t.some(w => w.includes('بقلم'))) {
+                docIsLtrStream = true;
+                break;
+            }
+        }
+
         const fixedLines = lines.map(line => {
             if (!line.trim()) return "";
-            const tokens = line.split(/\s+/);
-            if (tokens.length <= 1) return line;
+            const tokens = line.trim().split(/\s+/);
+            if (tokens.length <= 1) return line.trim();
 
             const firstTok = tokens[0] || "";
             const lastTok = tokens[tokens.length - 1] || "";
+            const cleanLast = lastTok.replace(/[^\w]/g, '');
 
             const isReversed = (
-                lastTok === ':' || lastTok === 'بقلم' || lastTok === 'بقلم:' || lastTok === 'الاستاذ:' || lastTok === 'الأستاذ:' ||
+                docIsLtrStream ||
+                cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' ||
                 lastTok.endsWith('بقلم') || lastTok.endsWith(':') ||
                 firstTok === '،' || firstTok === '؛' || firstTok === '.' || firstTok === ':' ||
                 firstTok.startsWith('،') || firstTok.startsWith('؛') ||

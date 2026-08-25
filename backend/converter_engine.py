@@ -98,6 +98,12 @@ import re
 
 PUNCTUATION_CHARS = {'،', '؛', '.', ':', '!', '؟', '"', '(', ')', '[', ']', '•'}
 
+def sanitize_text(text: str) -> str:
+    """Strips invisible Unicode control characters, carriage returns, and zero-width spaces."""
+    if not text:
+        return ""
+    return re.sub(r'[\r\u200e\u200f\ufeff\u202a-\u202e\xa0]', '', text)
+
 def auto_fix_arabic_sentence_flow(text: str) -> str:
     """
     Automatic Punctuation-Aware Arabic Sentence Flow & Word Order Normalizer.
@@ -107,33 +113,52 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
     if not text:
         return ""
 
+    text = sanitize_text(text)
     lines = text.split('\n')
-    fixed_lines = []
+    
+    # Document-level LTR stream detection across the first 15 lines
+    doc_is_ltr_stream = False
+    for line in lines[:15]:
+        t = line.strip().split()
+        if not t:
+            continue
+        clean_last = re.sub(r'[^\w]', '', t[-1]) if t else ""
+        clean_first = re.sub(r'[^\w]', '', t[0]) if t else ""
+        
+        if clean_last in ['بقلم', 'الاستاذ', 'الأستاذ'] or t[-1].endswith(':بقلم') or t[-1].endswith('بقلم'):
+            doc_is_ltr_stream = True
+            break
+        if clean_first in ['علي', 'عبد', 'ملا'] and any('بقلم' in w for w in t):
+            doc_is_ltr_stream = True
+            break
 
+    fixed_lines = []
     for line in lines:
         if not line.strip():
             fixed_lines.append("")
             continue
 
-        tokens = line.split()
+        tokens = line.strip().split()
         if len(tokens) <= 1:
-            fixed_lines.append(line)
+            fixed_lines.append(line.strip())
             continue
 
         first_tok = tokens[0]
         last_tok = tokens[-1]
         
-        # Detect if line contains LTR-reversed sentence stream
-        is_reversed = (
-            last_tok in [':', 'بقلم', 'بقلم:', 'الاستاذ:', 'الأستاذ:'] or 
-            last_tok.endswith('بقلم') or 
-            last_tok.endswith(':') or
+        clean_last = re.sub(r'[^\w]', '', last_tok)
+        clean_first = re.sub(r'[^\w]', '', first_tok)
+
+        line_is_reversed = (
+            doc_is_ltr_stream or
+            clean_last in ['بقلم', 'الاستاذ', 'الأستاذ'] or
+            last_tok.endswith('بقلم') or last_tok.endswith(':') or
             first_tok in ['،', '؛', '.', ':', '،'] or
             first_tok.startswith('،') or first_tok.startswith('؛') or
             (last_tok.endswith('،') or last_tok.endswith('؛') or last_tok.endswith(','))
         )
 
-        if is_reversed:
+        if line_is_reversed:
             tokens = list(reversed(tokens))
 
         cleaned_tokens = []
