@@ -135,35 +135,81 @@ def fix_reversed_arabic_line(line: str) -> str:
     return rev.strip()
 
 
+def rejoin_spaced_arabic_letters(line: str) -> str:
+    """
+    Rejoins isolated Arabic letters separated by inter-letter spaces inside words.
+    Example: 'الم ن ك ت ر ق م' -> 'الم نكت رقم'
+    Example: 'ت س ل س ل' -> 'تسلسل'
+    Example: 'الم ع بـاس' -> 'العباس'
+    Example: 'بن ع بـد' -> 'بن عبد'
+    """
+    clean_line = line.replace('ـ', '').replace('\u200c', '').replace('\u200d', '')
+    if not clean_line.strip():
+        return ""
+    
+    tokens = clean_line.strip().split()
+    merged = []
+    buffer = ""
+
+    for tok in tokens:
+        clean_t = re.sub(r'[^\w]', '', tok)
+        has_arabic = any('\u0600' <= c <= '\u06ff' for c in clean_t)
+        is_letter_piece = has_arabic and len(clean_t) <= 2 and not any(c in PUNCTUATION_CHARS for c in tok)
+
+        if is_letter_piece:
+            buffer += tok
+        else:
+            if buffer:
+                merged.append(buffer)
+                buffer = ""
+            merged.append(tok)
+
+    if buffer:
+        merged.append(buffer)
+
+    return " ".join(merged)
+
+
 def auto_fix_arabic_sentence_flow(text: str) -> str:
     """
     Automatic Punctuation-Aware Arabic Sentence Flow & Word/Character Order Normalizer.
-    Strips Tatweels (ـ), fixes LTR reversed character and word streams, attaches punctuation
-    properly after words, and prevents disoriented punctuation placement.
+    Supports Type A (LTR Reversed Character Streams) and Type B (Disconnected Inter-Letter Spaces).
+    Strips Tatweels (ـ) and fixes punctuation placement.
     """
     if not text:
         return ""
 
     text = sanitize_text(text)
     lines = text.split('\n')
-    
-    # Check if document has LTR reversed Arabic text (e.g. starts with 'لمضم' or contains 'ـ' or ends with 'دلا')
-    doc_is_reversed = False
-    for line in lines[:15]:
-        if 'ـ' in line or 'لمضم' in line or 'يـعالدلا' in line or line.strip().endswith('دلا') or line.strip().endswith('لاا'):
-            doc_is_reversed = True
-            break
 
     fixed_lines = []
     for line in lines:
-        if not line.strip():
+        raw_line = line.replace('ـ', '').replace('\u200c', '').replace('\u200d', '')
+        if not raw_line.strip():
             fixed_lines.append("")
             continue
 
-        if doc_is_reversed or 'ـ' in line or 'لمضم' in line or line.strip().endswith('دلا'):
+        tokens = raw_line.strip().split()
+        if not tokens:
+            fixed_lines.append("")
+            continue
+
+        # Check if line is Type A (Character Reversed Stream)
+        is_type_a_reversed = (
+            'لمضم' in raw_line or 'يـعالدلا' in raw_line or
+            any(w.endswith('دلا') or w.endswith('لاا') for w in tokens)
+        )
+
+        if is_type_a_reversed:
             fixed_lines.append(fix_reversed_arabic_line(line))
+            continue
+
+        # Check if line is Type B (Disconnected Inter-Letter Spaces)
+        single_letter_count = sum(1 for t in tokens if len(re.sub(r'[^\w]', '', t)) <= 2 and any('\u0600' <= c <= '\u06ff' for c in t))
+        if single_letter_count >= 2:
+            fixed_lines.append(rejoin_spaced_arabic_letters(line))
         else:
-            fixed_lines.append(line.strip())
+            fixed_lines.append(raw_line.strip())
 
     return "\n".join(fixed_lines)
 

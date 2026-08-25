@@ -287,26 +287,67 @@ document.addEventListener('DOMContentLoaded', () => {
         return rev.trim();
     }
 
+    function rejoinSpacedArabicLetters(line) {
+        const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
+        if (!cleanLine.trim()) return "";
+
+        const tokens = cleanLine.trim().split(/\s+/);
+        const merged = [];
+        let buffer = "";
+
+        for (let tok of tokens) {
+            const cleanT = tok.replace(/[^\w]/g, '');
+            const hasArabic = /[\u0600-\u06ff]/.test(cleanT);
+            const isLetterPiece = hasArabic && cleanT.length <= 2 && !PUNCTUATION_SET.has(tok);
+
+            if (isLetterPiece) {
+                buffer += tok;
+            } else {
+                if (buffer) {
+                    merged.push(buffer);
+                    buffer = "";
+                }
+                merged.push(tok);
+            }
+        }
+
+        if (buffer) {
+            merged.push(buffer);
+        }
+        return merged.join(' ');
+    }
+
     function autoFixArabicSentenceFlow(text) {
         if (!text) return "";
         const cleanText = sanitizeText(text);
         const lines = cleanText.split('\n');
 
-        let docIsReversed = false;
-        const checkLines = lines.slice(0, 15);
-        for (let l of checkLines) {
-            if (l.includes('ـ') || l.includes('لمضم') || l.includes('يـعالدلا') || l.trim().endsWith('دلا') || l.trim().endsWith('لاا')) {
-                docIsReversed = true;
-                break;
-            }
-        }
-
         const fixedLines = lines.map(line => {
-            if (!line.trim()) return "";
-            if (docIsReversed || line.includes('ـ') || line.includes('لمضم') || line.trim().endsWith('دلا')) {
+            const rawLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
+            if (!rawLine.trim()) return "";
+
+            const tokens = rawLine.trim().split(/\s+/);
+            if (!tokens || tokens.length === 0) return "";
+
+            const isTypeAReversed = (
+                rawLine.includes('لمضم') || rawLine.includes('يـعالدلا') ||
+                tokens.some(w => w.endsWith('دلا') || w.endsWith('لاا'))
+            );
+
+            if (isTypeAReversed) {
                 return fixReversedArabicLine(line);
             }
-            return line.trim();
+
+            const singleLetterCount = tokens.filter(t => {
+                const c = t.replace(/[^\w]/g, '');
+                return c.length <= 2 && /[\u0600-\u06ff]/.test(c);
+            }).length;
+
+            if (singleLetterCount >= 2) {
+                return rejoinSpacedArabicLetters(line);
+            }
+
+            return rawLine.trim();
         });
         return fixedLines.join('\n');
     }
