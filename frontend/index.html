@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محول لسان الدعوة - Alkanz Unicode Document Converter</title>
+    <!-- Google Fonts: Amiri, Scheherazade New, Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+    <!-- Navigation Header -->
+    <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700/80 sticky top-0 z-40 px-4 py-3 shadow-md">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-amber-500 p-0.5 shadow-lg shadow-teal-500/20">
+                    <div class="w-full h-full bg-slate-900 rounded-[10px] flex items-center justify-center text-amber-400 font-bold text-xl">
+                        د
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold bg-gradient-to-r from-white via-slate-100 to-amber-300 bg-clip-text text-transparent">
+                        محول لسان الدعوة (Alkanz Unicode)
+                    </h1>
+                    <p class="text-xs text-slate-400">Non-AI Deterministic Layout Rule Converter & Word (.docx) Exporter</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 space-x-reverse text-sm">
+                <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>100% بدون ذكاء اصطناعي (Non-AI Offline)</span>
+                </span>
+
+                <button id="btn-load-sample" class="bg-slate-700/70 hover:bg-slate-700 text-amber-300 border border-amber-500/30 px-3.5 py-1.5 rounded-lg font-medium transition flex items-center gap-2 text-xs">
+                    <i class="fa-solid fa-file-lines"></i>
+                    <span>تجربة نص عينة (Sample)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="flex-1 flex flex-col max-w-[1600px] w-full mx-auto p-4 gap-4 overflow-hidden">
+
+        <!-- Preset & Rule Configuration Bar -->
+        <section class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-xl">
+            <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
+                
+                <!-- Preset Selector -->
+                <div class="flex items-center gap-3 w-full lg:w-auto">
+                    <label class="text-xs font-bold text-amber-400 flex items-center gap-1.5 whitespace-nowrap">
+                        <i class="fa-solid fa-keyboard"></i>
+                        <span>نمط لوحة المفاتيح:</span>
+                    </label>
+                    <select id="preset-select" class="bg-slate-900 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-amber-500 w-full lg:w-72">
+                        <option value="alkanz_normal" selected>Alkanz Normal Layout</option>
+                        <option value="alkanz_urdu">Alkanz Urdu Layout</option>
+                        <option value="kanzmarjan">Kanzmarjan Layout</option>
+                        <option value="amiri_urdu">Amiri Urdu Layout</option>
+                        <option value="custom">Custom Rules</option>
+                    </select>
+                </div>
+
+                <!-- Rule Table Toggle & File Upload -->
+                <div class="flex items-center gap-3 w-full lg:w-auto justify-end">
+                    <button id="btn-toggle-rules" class="bg-slate-700/70 hover:bg-slate-700 text-slate-200 border border-slate-600 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-amber-400"></i>
+                        <span>عرض/تعديل القواعد</span>
+                    </button>
+
+                    <button id="btn-upload-top" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-xl text-xs shadow transition cursor-pointer flex items-center gap-2">
+                        <i class="fa-solid fa-file-arrow-up"></i>
+                        <span>رفع مستند (.docx, .txt, .pdf)</span>
+                    </button>
+                    <input type="file" id="file-input" accept=".docx,.txt,.pdf,.png,.jpg,.jpeg,.webp,.bmp,.tiff" class="hidden">
+                </div>
+            </div>
+
+            <!-- Expandable Rules Editor Table -->
+            <div id="rules-editor-panel" class="hidden mt-4 pt-4 border-t border-slate-700/80">
+                <div class="flex items-center justify-between mb-2 text-xs">
+                    <h3 class="font-bold text-amber-300">جدول قواعد الاستبدال المباشر (Direct Character Replacements):</h3>
+                    <button id="btn-add-rule" class="text-xs bg-slate-700 hover:bg-slate-600 text-emerald-400 px-2.5 py-1 rounded transition flex items-center gap-1">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>إضافة قاعدة جديدة</span>
+                    </button>
+                </div>
+
+                <div class="max-h-48 overflow-y-auto bg-slate-950/80 rounded-xl p-3 border border-slate-700">
+                    <div id="rules-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 text-xs">
+                        <!-- Rule items generated via JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Status & Stats Bar -->
+        <div id="status-bar" class="bg-slate-800/90 border border-slate-700 px-4 py-2 rounded-xl flex items-center justify-between text-xs text-slate-300">
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="status-text">جاهز للتحويل المباشر السريع</span>
+            </div>
+            <div id="replacement-stats" class="text-amber-400 font-semibold">
+                <span>0 عمليات استبدال</span>
+            </div>
+        </div>
+
+        <!-- Split Pane: Input Original Document vs Converted Lisan al Dawat Unicode Output -->
+        <section class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-[550px] overflow-hidden">
+            
+            <!-- Left Pane: Input Document / Raw Text -->
+            <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl flex flex-col overflow-hidden shadow-xl">
+                <!-- Pane Header -->
+                <div class="bg-slate-900/80 px-4 py-2.5 border-b border-slate-700 flex items-center justify-between text-xs text-slate-300">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-file-lines text-amber-400"></i>
+                        <span class="font-semibold">النص الأصلي / المستند المدخل (Original Input)</span>
+                    </div>
+
+                    <!-- Input Controls: Upload, Paste, Clear -->
+                    <div class="flex items-center gap-2">
+                        <button id="btn-upload-pane" class="bg-blue-600/90 hover:bg-blue-500 text-white font-medium px-2.5 py-1 rounded-lg text-[11px] shadow transition cursor-pointer flex items-center gap-1.5" title="رفع مستند (.docx, .txt, .pdf)">
+                            <i class="fa-solid fa-file-arrow-up text-blue-200"></i>
+                            <span>رفع مستند</span>
+                        </button>
+                        <input type="file" id="file-input-pane" accept=".docx,.txt,.pdf,.png,.jpg,.jpeg,.webp,.bmp,.tiff" class="hidden">
+
+                        <button id="btn-paste-input" class="bg-slate-800 hover:bg-slate-700 text-amber-300 font-medium px-2.5 py-1 rounded-lg text-[11px] border border-slate-700 transition flex items-center gap-1.5" title="لصق النص من الحافظة">
+                            <i class="fa-solid fa-paste text-amber-400"></i>
+                            <span>لصق</span>
+                        </button>
+
+                        <button id="btn-clear-input" class="text-slate-400 hover:text-rose-400 transition ml-1" title="مسح النص">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Input Textarea & Drag/Drop Container -->
+                <div id="input-drop-zone" class="flex-1 p-3 bg-slate-950/70 flex flex-col relative overflow-hidden transition">
+                    
+                    <!-- Drag and Drop Overlay Indicator -->
+                    <div id="drop-overlay" class="hidden absolute inset-0 bg-blue-600/20 backdrop-blur-sm border-2 border-dashed border-blue-400 z-30 flex flex-col items-center justify-center gap-3 text-blue-200 pointer-events-none">
+                        <i class="fa-solid fa-cloud-arrow-up text-5xl animate-bounce text-blue-300"></i>
+                        <p class="font-bold text-sm">أفلت المستند هنا للتحويل الفوري (.docx, .txt, .pdf)</p>
+                    </div>
+
+                    <textarea id="input-editor" dir="rtl" class="w-full h-full bg-transparent border-0 text-slate-100 font-amiri text-lg leading-relaxed focus:outline-none resize-none" placeholder="أدخل النص الأصلي أو الصقه هنا... (مثل: ككتاب, سسند, ثثول)... يمكنك أيضاً سحب وإفلات أو رفع ملف docx أو txt أو pdf هنا"></textarea>
+                </div>
+            </div>
+
+            <!-- Right Pane: Converted Lisan al Dawat Unicode Text -->
+            <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl flex flex-col overflow-hidden shadow-xl">
+                <!-- Editor Header Toolbar -->
+                <div class="bg-slate-900/80 px-4 py-2.5 border-b border-slate-700 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                        <span class="font-semibold text-emerald-400">النص المحول (Unicode Lisan al Dawat)</span>
+                        
+                        <select id="font-select" dir="ltr" class="bg-slate-800 border border-slate-700 rounded text-slate-200 text-xs px-2.5 py-1 focus:outline-none focus:border-amber-500 font-sans font-semibold">
+                            <option value="Al Kanz" selected>Al Kanz</option>
+                            <option value="Al Fatemi">Al Fatemi</option>
+                            <option value="Kanz al Marjaan">Kanz al Marjaan</option>
+                            <option value="Kanz al Yaqoot">Kanz al Yaqoot</option>
+                            <option value="Kanz al Lulu">Kanz al Lulu</option>
+                            <optgroup id="optgroup-custom-fonts" label="Custom Preset Fonts">
+                                <!-- Extra font options added here -->
+                            </optgroup>
+                        </select>
+
+                        <button id="btn-upload-font" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 px-2 py-1 rounded text-xs transition flex items-center gap-1" title="رفع خط مخصص (TTF, OTF, WOFF)">
+                            <i class="fa-solid fa-font text-xs"></i>
+                            <span>+ رفع خط</span>
+                        </button>
+                        <input type="file" id="font-file-input" accept=".ttf,.otf,.woff,.woff2" class="hidden">
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-2">
+                        <button id="btn-copy-text" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2.5 py-1 rounded transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-copy"></i>
+                            <span>نسخ</span>
+                        </button>
+
+                        <button id="btn-export-docx" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold px-3 py-1 rounded shadow transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-word text-sm"></i>
+                            <span>تصدير Word (.docx)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Converted Text Output -->
+                <div class="flex-1 p-3 bg-slate-950/90 flex flex-col">
+                    <textarea id="output-editor" dir="rtl" class="w-full h-full bg-transparent border-0 text-slate-100 font-amiri text-lg leading-relaxed focus:outline-none resize-none" placeholder="سيظهر النص المحول هنا فوراً... (مثلاً: گتاب, ےند, پول)..." readonly></textarea>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="/static/js/ruleManager.js"></script>
+    <script src="/static/js/editor.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
