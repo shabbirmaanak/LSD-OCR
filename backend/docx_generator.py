@@ -4,6 +4,7 @@ Configures native Right-To-Left (RTL) XML properties, Arabic font styling,
 and paragraph structure so generated documents render cleanly in MS Word & LibreOffice.
 """
 
+import os
 import io
 from typing import List, Dict, Any, Optional
 from docx import Document
@@ -68,15 +69,6 @@ def generate_lsd_docx(
 ) -> bytes:
     """
     Generates a native Word (.docx) binary stream from OCR extracted pages.
-    
-    pages_data structure:
-    [
-        {
-            "page_num": 1,
-            "text": "Extracted Lisan al Dawat text...",
-            "image_bytes": b"..." (optional)
-        }, ...
-    ]
     """
     doc = Document()
     
@@ -87,14 +79,23 @@ def generate_lsd_docx(
         section.bottom_margin = Inches(1.0)
         section.left_margin = Inches(1.0)
         section.right_margin = Inches(1.0)
-        # Enable Right-to-Left section flow if possible
         sectPr = section._sectPr
         bidi_sect = create_element('w:bidi')
         sectPr.append(bidi_sect)
 
+    # Embed Official LSD Seal Logo Header if available
+    logo_path = os.path.join(os.path.dirname(__file__), "..", "frontend", "img", "logo.png")
+    if os.path.exists(logo_path):
+        try:
+            logo_p = doc.add_paragraph()
+            logo_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            logo_p.add_run().add_picture(logo_path, width=Inches(1.2))
+        except Exception as e:
+            print(f"Could not attach logo to docx: {e}")
+
     # Document Header / Title
     title_p = doc.add_paragraph()
-    set_paragraph_rtl(title_p)
+    title_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     title_run = title_p.add_run(document_title)
     set_run_arabic_font(title_run, font_name=font_name, font_size_pt=20, is_bold=True, is_header=True)
     
