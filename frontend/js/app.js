@@ -375,10 +375,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 editor.setStats(data.replacements_count || 0);
 
                 if (!convertedText) {
-                    alert("Note: This document does not contain selectable text (it may be a scanned image).");
+                    updateStatus(`Document ${data.filename} loaded, but no selectable text was found.`, true);
+                } else {
+                    updateStatus(`Document ${data.filename} extracted & converted successfully!`, false);
                 }
-                
-                updateStatus(`Document ${data.filename} extracted & converted successfully!`, false);
             } else {
                 alert("Error processing document: " + (data.detail || "Unknown error"));
             }
