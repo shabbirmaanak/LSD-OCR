@@ -323,31 +323,35 @@ document.addEventListener('DOMContentLoaded', () => {
         const lines = cleanText.split('\n');
 
         const fixedLines = lines.map(line => {
-            const rawLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
-            if (!rawLine.trim()) return "";
+            const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '').replace(/`/g, '');
+            if (!cleanLine.trim()) return "";
 
-            const tokens = rawLine.trim().split(/\s+/);
+            const tokens = cleanLine.trim().split(/\s+/);
             if (!tokens || tokens.length === 0) return "";
 
-            const isTypeAReversed = (
-                rawLine.includes('لمضم') || rawLine.includes('يـعالدلا') ||
-                tokens.some(w => w.endsWith('دلا') || w.endsWith('لاا'))
+            const firstWord = tokens[0].replace(/[^\w]/g, '');
+            const lastWord = tokens[tokens.length - 1].replace(/[^\w]/g, '');
+
+            const isTrulyReversed = (
+                cleanLine.includes('لمضم') || cleanLine.includes('يـعالدلا') ||
+                firstWord === 'لمضم' || firstWord === 'يـعالدلا' ||
+                (lastWord.endsWith('دلا') && !firstWord.startsWith('ال'))
             );
 
-            if (isTypeAReversed) {
+            if (isTrulyReversed) {
                 return fixReversedArabicLine(line);
             }
 
             const singleLetterCount = tokens.filter(t => {
                 const c = t.replace(/[^\w]/g, '');
-                return c.length <= 2 && /[\u0600-\u06ff]/.test(c);
+                return c.length === 1 && /[\u0600-\u06ff]/.test(c);
             }).length;
 
-            if (singleLetterCount >= 2) {
+            if (singleLetterCount >= 3) {
                 return rejoinSpacedArabicLetters(line);
             }
 
-            return rawLine.trim();
+            return cleanLine.trim();
         });
         return fixedLines.join('\n');
     }

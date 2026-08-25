@@ -173,8 +173,8 @@ def rejoin_spaced_arabic_letters(line: str) -> str:
 def auto_fix_arabic_sentence_flow(text: str) -> str:
     """
     Automatic Punctuation-Aware Arabic Sentence Flow & Word/Character Order Normalizer.
-    Supports Type A (LTR Reversed Character Streams) and Type B (Disconnected Inter-Letter Spaces).
-    Strips Tatweels (ـ) and fixes punctuation placement.
+    Preserves 100% accurate original Arabic line direction unless explicit LTR character-reversal
+    or inter-letter spacing is detected. Strips Tatweels (ـ) and zero-width artifacts.
     """
     if not text:
         return ""
@@ -184,32 +184,37 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
 
     fixed_lines = []
     for line in lines:
-        raw_line = line.replace('ـ', '').replace('\u200c', '').replace('\u200d', '')
-        if not raw_line.strip():
+        clean_line = line.replace('ـ', '').replace('\u200c', '').replace('\u200d', '').replace('`', '')
+        if not clean_line.strip():
             fixed_lines.append("")
             continue
 
-        tokens = raw_line.strip().split()
+        tokens = clean_line.strip().split()
         if not tokens:
             fixed_lines.append("")
             continue
 
-        # Check if line is Type A (Character Reversed Stream)
-        is_type_a_reversed = (
-            'لمضم' in raw_line or 'يـعالدلا' in raw_line or
-            any(w.endswith('دلا') or w.endswith('لاا') for w in tokens)
+        first_word = re.sub(r'[^\w]', '', tokens[0])
+        last_word = re.sub(r'[^\w]', '', tokens[-1])
+
+        # ONLY reverse character stream if line EXPLICITLY contains backwards LTR indicators (e.g. 'لمضم' or 'يـعالدلا')
+        is_truly_reversed = (
+            'لمضم' in clean_line or 'يـعالدلا' in clean_line or
+            first_word in ['لمضم', 'يـعالدلا'] or
+            (last_word.endswith('دلا') and not first_word.startswith('ال'))
         )
 
-        if is_type_a_reversed:
+        if is_truly_reversed:
             fixed_lines.append(fix_reversed_arabic_line(line))
             continue
 
-        # Check if line is Type B (Disconnected Inter-Letter Spaces)
-        single_letter_count = sum(1 for t in tokens if len(re.sub(r'[^\w]', '', t)) <= 2 and any('\u0600' <= c <= '\u06ff' for c in t))
-        if single_letter_count >= 2:
+        # Check for Type B (Disconnected Inter-Letter Spaces: e.g., 'ت س ل س ل' -> 'تسلسل')
+        single_letter_count = sum(1 for t in tokens if len(re.sub(r'[^\w]', '', t)) == 1 and any('\u0600' <= c <= '\u06ff' for c in t))
+        if single_letter_count >= 3:
             fixed_lines.append(rejoin_spaced_arabic_letters(line))
         else:
-            fixed_lines.append(raw_line.strip())
+            # Leave normal Arabic line order 100% UNTOUCHED!
+            fixed_lines.append(clean_line.strip())
 
     return "\n".join(fixed_lines)
 
