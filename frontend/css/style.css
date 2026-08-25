@@ -55,3 +55,25 @@ textarea, input, select {
 .text-bohra-gold {
     color: #f59e0b;
 }
+
+/* Mobile Responsive Media Queries */
+@media (max-width: 1023px) {
+    main {
+        padding: 0.75rem !important;
+        gap: 0.75rem !important;
+    }
+    
+    .min-h-\[550px\] {
+        min-height: calc(100vh - 210px) !important;
+    }
+    
+    textarea {
+        font-size: 1rem !important;
+        line-height: 1.8 !important;
+    }
+
+    button, select, label {
+        min-height: 36px;
+        touch-action: manipulation;
+    }
+}

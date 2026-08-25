@@ -17,6 +17,63 @@ document.addEventListener('DOMContentLoaded', () => {
     setupInputEvents();
     setupFontUpload();
     setupActions();
+    setupMobileTabs();
+
+    function setupMobileTabs() {
+        const tabInput = document.getElementById('tab-input');
+        const tabOutput = document.getElementById('tab-output');
+        const tabSettings = document.getElementById('tab-settings');
+
+        const paneInput = document.getElementById('pane-input');
+        const paneOutput = document.getElementById('pane-output');
+        const sectionSettings = document.getElementById('section-settings');
+
+        if (!tabInput || !tabOutput || !tabSettings || !paneInput || !paneOutput) return;
+
+        function setActiveTab(activeTab) {
+            [tabInput, tabOutput, tabSettings].forEach(t => {
+                t.classList.remove('bg-blue-600', 'text-white', 'shadow');
+                t.classList.add('text-slate-300', 'hover:bg-slate-700/60');
+            });
+
+            activeTab.classList.remove('text-slate-300', 'hover:bg-slate-700/60');
+            activeTab.classList.add('bg-blue-600', 'text-white', 'shadow');
+
+            if (window.innerWidth < 1024) {
+                if (activeTab === tabInput) {
+                    paneInput.classList.remove('hidden');
+                    paneOutput.classList.add('hidden');
+                    if (sectionSettings) sectionSettings.classList.add('hidden');
+                } else if (activeTab === tabOutput) {
+                    paneInput.classList.add('hidden');
+                    paneOutput.classList.remove('hidden');
+                    if (sectionSettings) sectionSettings.classList.add('hidden');
+                } else if (activeTab === tabSettings) {
+                    paneInput.classList.add('hidden');
+                    paneOutput.classList.add('hidden');
+                    if (sectionSettings) sectionSettings.classList.remove('hidden');
+                }
+            }
+        }
+
+        tabInput.addEventListener('click', () => setActiveTab(tabInput));
+        tabOutput.addEventListener('click', () => setActiveTab(tabOutput));
+        tabSettings.addEventListener('click', () => setActiveTab(tabSettings));
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                paneInput.classList.remove('hidden');
+                paneOutput.classList.remove('hidden');
+                if (sectionSettings) sectionSettings.classList.remove('hidden');
+            } else {
+                setActiveTab(tabInput);
+            }
+        });
+
+        if (window.innerWidth < 1024) {
+            setActiveTab(tabInput);
+        }
+    }
 
     function setupFontUpload() {
         const btnUploadFont = document.getElementById('btn-upload-font');

@@ -51,8 +51,24 @@
     <!-- Main Workspace Container -->
     <main class="flex-1 flex flex-col max-w-[1600px] w-full mx-auto p-4 gap-4 overflow-hidden">
 
+        <!-- Mobile Multi-Screen Navigation Tabs (Visible on mobile/tablet < 1024px) -->
+        <div id="mobile-tab-bar" class="flex lg:hidden bg-slate-800 border border-slate-700 p-1 rounded-xl gap-1 text-xs shadow-md">
+            <button id="tab-input" class="flex-1 py-2 px-3 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow">
+                <i class="fa-solid fa-file-lines text-amber-300"></i>
+                <span>النص الأصلي</span>
+            </button>
+            <button id="tab-output" class="flex-1 py-2 px-3 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/60">
+                <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
+                <span>النص المحول</span>
+            </button>
+            <button id="tab-settings" class="flex-1 py-2 px-3 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/60">
+                <i class="fa-solid fa-sliders text-amber-400"></i>
+                <span>الإعدادات</span>
+            </button>
+        </div>
+
         <!-- Preset & Rule Configuration Bar -->
-        <section class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-xl">
+        <section id="section-settings" class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-xl">
             <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
                 
                 <!-- Preset Selector -->
@@ -71,7 +87,7 @@
                 </div>
 
                 <!-- Rule Table Toggle & File Upload -->
-                <div class="flex items-center gap-3 w-full lg:w-auto justify-end">
+                <div class="flex items-center gap-3 w-full lg:w-auto justify-end flex-wrap sm:flex-nowrap">
                     <button id="btn-toggle-rules" class="bg-slate-700/70 hover:bg-slate-700 text-slate-200 border border-slate-600 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2">
                         <i class="fa-solid fa-sliders text-amber-400"></i>
                         <span>عرض/تعديل القواعد</span>
@@ -115,10 +131,10 @@
         </div>
 
         <!-- Split Pane: Input Original Document vs Converted Lisan al Dawat Unicode Output -->
-        <section class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-[550px] overflow-hidden">
+        <section class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-[500px] overflow-hidden">
             
             <!-- Left Pane: Input Document / Raw Text -->
-            <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl flex flex-col overflow-hidden shadow-xl">
+            <div id="pane-input" class="bg-slate-800/80 border border-slate-700/70 rounded-2xl flex flex-col overflow-hidden shadow-xl">
                 <!-- Pane Header -->
                 <div class="bg-slate-900/80 px-4 py-2.5 border-b border-slate-700 flex items-center justify-between text-xs text-slate-300">
                     <div class="flex items-center gap-2">
@@ -159,7 +175,7 @@
             </div>
 
             <!-- Right Pane: Converted Lisan al Dawat Unicode Text -->
-            <div class="bg-slate-800/80 border border-slate-700/70 rounded-2xl flex flex-col overflow-hidden shadow-xl">
+            <div id="pane-output" class="bg-slate-800/80 border border-slate-700/70 rounded-2xl flex flex-col overflow-hidden shadow-xl">
                 <!-- Editor Header Toolbar -->
                 <div class="bg-slate-900/80 px-4 py-2.5 border-b border-slate-700 flex items-center justify-between text-xs">
                     <div class="flex items-center gap-2">
