@@ -346,6 +346,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return res;
     }
 
+    function stripPunc(str) {
+        if (!str) return '';
+        return str.replace(/[\s\p{P}\p{S}]/gu, '');
+    }
+
     function autoFixArabicSentenceFlow(text) {
         if (!text) return "";
         const cleanText = sanitizeText(text);
@@ -356,10 +361,10 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let l of checkLines) {
             const t = l.trim().split(/\s+/);
             if (!t || t.length === 0 || !t[0]) continue;
-            const cleanLast = t[t.length - 1].replace(/[^\w]/g, '');
-            const cleanFirst = t[0].replace(/[^\w]/g, '');
+            const cleanLast = stripPunc(t[t.length - 1]);
+            const cleanFirst = stripPunc(t[0]);
 
-            if (cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الشيخ' || t[t.length - 1].endsWith('بقلم')) {
+            if (cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الشيخ' || t[t.length - 1].includes('بقلم')) {
                 docIsWordReversed = true;
                 break;
             }
@@ -376,8 +381,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const tokens = cleanLine.trim().split(/\s+/);
             if (!tokens || tokens.length === 0) return "";
 
-            const firstWord = tokens[0].replace(/[^\w]/g, '');
-            const lastWord = tokens[tokens.length - 1].replace(/[^\w]/g, '');
+            const firstWord = stripPunc(tokens[0]);
+            const lastWord = stripPunc(tokens[tokens.length - 1]);
 
             const isTrulyCharReversed = (
                 cleanLine.includes('لمضم') || cleanLine.includes('يـعالدلا') ||
@@ -389,7 +394,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return fixReversedArabicLine(line);
             }
 
-            if (docIsWordReversed || lastWord === 'بقلم' || lastWord === 'الاستاذ' || lastWord === 'الشيخ' || lastWord.endsWith('بقلم')) {
+            if (docIsWordReversed || lastWord === 'بقلم' || lastWord === 'الاستاذ' || lastWord === 'الشيخ' || tokens[tokens.length - 1].includes('بقلم')) {
                 return fixWordReversedLine(line);
             }
 

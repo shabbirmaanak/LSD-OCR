@@ -201,6 +201,13 @@ def fix_word_reversed_line(line: str) -> str:
     return res
 
 
+def strip_punc(s: str) -> str:
+    """Strips punctuation and symbols while retaining Arabic and alphanumeric characters."""
+    if not s:
+        return ""
+    return re.sub(r'[^\w\u0600-\u06ff]', '', s)
+
+
 def auto_fix_arabic_sentence_flow(text: str) -> str:
     """
     Automatic Punctuation-Aware Arabic Sentence Flow & Word/Character Order Normalizer.
@@ -220,10 +227,10 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
         t = line.strip().split()
         if not t:
             continue
-        clean_last = re.sub(r'[^\w]', '', t[-1]) if t else ""
-        clean_first = re.sub(r'[^\w]', '', t[0]) if t else ""
+        clean_last = strip_punc(t[-1]) if t else ""
+        clean_first = strip_punc(t[0]) if t else ""
 
-        if clean_last in ['بقلم', 'الاستاذ', 'الشيخ'] or t[-1].endswith('بقلم') or t[-1].endswith('بقلم:'):
+        if clean_last in ['بقلم', 'الاستاذ', 'الشيخ'] or 'بقلم' in t[-1]:
             doc_is_word_reversed = True
             break
         if 'الاول ربيع شهر' in line or 'الله رسول' in line or 'علي عبد ملا' in line or clean_first in ['علي', 'عبد', 'ملا']:
@@ -242,8 +249,8 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
             fixed_lines.append("")
             continue
 
-        first_word = re.sub(r'[^\w]', '', tokens[0])
-        last_word = re.sub(r'[^\w]', '', tokens[-1])
+        first_word = strip_punc(tokens[0])
+        last_word = strip_punc(tokens[-1])
 
         # 1. Check for Type A (Character Reversed Stream e.g. 'لمضم' or 'يـعالدلا')
         is_truly_char_reversed = (
