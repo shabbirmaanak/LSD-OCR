@@ -101,6 +101,36 @@ def reverse_word_flow(line: str) -> str:
     return re.sub(r'\s+', ' ', res).strip()
 
 
+def rejoin_spaced_arabic_letters(text: str) -> str:
+    """Rejoins isolated Arabic single letters separated by spaces (e.g. 'ت س ل س ل' -> 'تسلسل')."""
+    if not text:
+        return ""
+    lines = text.split('\n')
+    fixed = []
+    for line in lines:
+        if not line.strip():
+            fixed.append("")
+            continue
+        tokens = line.strip().split()
+        merged = []
+        buffer = ""
+        for tok in tokens:
+            clean_t = re.sub(r'[^\w]', '', tok)
+            has_arabic = any('\u0600' <= c <= '\u06ff' for c in clean_t)
+            is_single_letter = has_arabic and len(clean_t) <= 1
+            if is_single_letter:
+                buffer += tok
+            else:
+                if buffer:
+                    merged.append(buffer)
+                    buffer = ""
+                merged.append(tok)
+        if buffer:
+            merged.append(buffer)
+        fixed.append(" ".join(merged))
+    return "\n".join(fixed)
+
+
 def convert_text(
     text: str,
     rules: Optional[Dict[str, str]] = None,

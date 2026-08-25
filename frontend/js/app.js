@@ -167,6 +167,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        const btnFixSpaced = document.getElementById('btn-fix-spaced');
+        if (btnFixSpaced) {
+            btnFixSpaced.addEventListener('click', () => {
+                const currentText = editor.getOutputText();
+                if (!currentText) return;
+                const lines = currentText.split('\n');
+                const fixed = lines.map(line => rejoinSpacedArabicLetters(line));
+                editor.setOutputText(fixed.join('\n'));
+                updateStatus("Disconnected letter spaces rejoined successfully!", false);
+            });
+        }
+
         const btnReverseFlow = document.getElementById('btn-reverse-flow');
         if (btnReverseFlow) {
             btnReverseFlow.addEventListener('click', () => {
@@ -214,6 +226,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!text) return "";
         const clean = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
         return clean.replace(/[\u200e\u200f\ufeff\u202a-\u202e\xa0]/g, '');
+    }
+
+    function rejoinSpacedArabicLetters(line) {
+        const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
+        if (!cleanLine.trim()) return "";
+        const tokens = cleanLine.trim().split(/\s+/);
+        const merged = [];
+        let buffer = "";
+
+        for (let tok of tokens) {
+            const cleanT = tok.replace(/[^\w]/g, '');
+            const hasArabic = /[\u0600-\u06ff]/.test(cleanT);
+            const isSingleLetter = hasArabic && cleanT.length <= 1;
+
+            if (isSingleLetter) {
+                buffer += tok;
+            } else {
+                if (buffer) {
+                    merged.push(buffer);
+                    buffer = "";
+                }
+                merged.push(tok);
+            }
+        }
+        if (buffer) merged.push(buffer);
+        return merged.join(' ');
     }
 
     function fixWordReversedLine(line) {
