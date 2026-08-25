@@ -187,7 +187,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lines = currentText.split('\n');
                 const flipped = lines.map(line => fixWordReversedLine(line));
                 editor.setOutputText(flipped.join('\n'));
-                updateStatus("Line flow flipped successfully!", false);
+                updateStatus("Word flow flipped per line successfully!", false);
+            });
+        }
+
+        const btnReverseLines = document.getElementById('btn-reverse-lines');
+        if (btnReverseLines) {
+            btnReverseLines.addEventListener('click', () => {
+                const currentText = editor.getOutputText();
+                if (!currentText) return;
+                const lines = currentText.split('\n');
+                lines.reverse();
+                editor.setOutputText(lines.join('\n'));
+                updateStatus("Vertical line order reversed (top-to-bottom)!", false);
             });
         }
 
