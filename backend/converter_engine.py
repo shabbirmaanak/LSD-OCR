@@ -1,12 +1,12 @@
 """
 Non-AI Deterministic Rule Engine for Lisan al Dawat (Alkanz / Kanzmarjan / Unicode) Conversion.
-Replaces legacy double-character keyboard codes with proper Unicode Lisan al Dawat characters.
+Replaces legacy double-character keyboard codes and Bohra extended codepoints with proper Unicode Lisan al Dawat characters.
 """
 
 import re
 from typing import Dict, Tuple, Optional
 
-# Preset 1: Alkanz Normal Keyboard Layout
+# Preset 1: Alkanz Normal Keyboard Layout + Bohra Font Mappings
 ALKANZ_NORMAL_RULES: Dict[str, str] = {
     # Double Arabic character codes -> Unicode LSD
     "كك": "گ",
@@ -20,6 +20,13 @@ ALKANZ_NORMAL_RULES: Dict[str, str] = {
     "ضض": "ڈ",
     "ظظ": "ڑ",
     "؛": "چهے",
+    
+    # Bohra / Alkanz extended Latin codepoint mappings
+    "Ţ": "ے",
+    "ţ": "ے",
+    "Ṣ": "گ",
+    "ṣ": "گ",
+    
     # QWERTY double-key codes -> Unicode LSD
     ";;": "گ",
     "ss": "ے",
@@ -34,16 +41,19 @@ ALKANZ_NORMAL_RULES: Dict[str, str] = {
 
 ALKANZ_URDU_RULES: Dict[str, str] = {
     "ثث": "پ", "حح": "چ", "كك": "گ", "طط": "ٹ", "نن": "ں",
-    "صص": "ژ", "ضض": "ڈ", "ظظ": "ڑ", "سس": "ے"
+    "صص": "ژ", "ضض": "ڈ", "ظظ": "ڑ", "سس": "ے",
+    "Ţ": "ے", "ţ": "ے", "Ṣ": "گ", "ṣ": "گ"
 }
 
 KANZMARJAN_RULES: Dict[str, str] = {
     "كك": "گ", "سس": "ے", "ثث": "پ", "حح": "چ", "طط": "ٹ", "نن": "ں",
+    "Ţ": "ے", "ţ": "ے", "Ṣ": "گ", "ṣ": "گ",
     ";;": "گ", "ss": "ے", "ee": "پ", "pp": "چ", "qq": "ٹ", "ww": "ں"
 }
 
 AMIRI_URDU_RULES: Dict[str, str] = {
-    "گ": "گ", "پ": "پ", "چ": "چ", "ٹ": "ٹ", "ے": "ے", "ں": "ں", "ڈ": "ڈ", "ڑ": "ڑ", "ژ": "ژ"
+    "گ": "گ", "پ": "پ", "چ": "چ", "ٹ": "ٹ", "ے": "ے", "ں": "ں", "ڈ": "ڈ", "ڑ": "ڑ", "ژ": "ژ",
+    "Ţ": "ے", "ţ": "ے", "Ṣ": "گ", "ṣ": "گ"
 }
 
 PRESETS = {
