@@ -260,14 +260,57 @@ document.addEventListener('DOMContentLoaded', () => {
         return text.replace(/[\r\u200e\u200f\ufeff\u202a-\u202e\xa0]/g, '');
     }
 
+    function fixArabicWordToken(w) {
+        if (!w) return "";
+        const cleanW = w.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
+        if (!cleanW) return "";
+
+        if (/[a-zA-Z0-9]/.test(cleanW)) {
+            return cleanW;
+        }
+
+        const bareW = cleanW.replace(/[^\w]/g, '');
+        if (bareW.length <= 1) return cleanW;
+
+        if (bareW.startsWith('ال') || bareW.startsWith('الم') || bareW.startsWith('سيد') ||
+            bareW.startsWith('مول') || bareW.startsWith('مف') || bareW.startsWith('حس') ||
+            bareW.startsWith('باو') || bareW.startsWith('صاح') || bareW.startsWith('امير')) {
+            return cleanW;
+        }
+
+        const shouldReverse = (
+            w.includes('ـ') ||
+            bareW.endsWith('دلا') || bareW.endsWith('لاا') || bareW.endsWith('بال') ||
+            bareW.endsWith('يال') || bareW.endsWith('مال') || bareW.endsWith('انلاوم') ||
+            bareW.startsWith('هش') || bareW.startsWith('فل') || bareW.startsWith('سف') ||
+            bareW.startsWith('ود') || bareW.startsWith('عر') || bareW.startsWith('طلو')
+        );
+
+        if (shouldReverse) {
+            let leading = "";
+            let trailing = "";
+            let core = cleanW;
+            while (core.length > 0 && PUNCTUATION_SET.has(core[0])) {
+                leading += core[0];
+                core = core.slice(1);
+            }
+            while (core.length > 0 && PUNCTUATION_SET.has(core[core.length - 1])) {
+                trailing = core[core.length - 1] + trailing;
+                core = core.slice(0, -1);
+            }
+            const revCore = core.split('').reverse().join('');
+            return leading + revCore + trailing;
+        }
+
+        return cleanW;
+    }
+
     function autoFixArabicSentenceFlow(text) {
         if (!text) return "";
         const cleanText = sanitizeText(text);
         const lines = cleanText.split('\n');
         
         let docIsLtrStream = false;
-        let docHasCharReversal = false;
-
         const checkLines = lines.slice(0, 15);
         for (let l of checkLines) {
             const t = l.trim().split(/\s+/);
@@ -277,17 +320,11 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' || t[t.length - 1].endsWith('بقلم')) {
                 docIsLtrStream = true;
+                break;
             }
             if ((cleanFirst === 'علي' || cleanFirst === 'عبد' || cleanFirst === 'ملا') && t.some(w => w.includes('بقلم'))) {
                 docIsLtrStream = true;
-            }
-            for (let word of t) {
-                const cleanW = word.replace(/[^\w]/g, '');
-                if (word.includes('ـ') || cleanW.endsWith('دلا') || cleanW.endsWith('لاا') || cleanW.endsWith('بال') || cleanW.endsWith('انلاوم')) {
-                    docHasCharReversal = true;
-                    docIsLtrStream = true;
-                    break;
-                }
+                break;
             }
         }
 
@@ -296,40 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const rawTokens = line.trim().split(/\s+/);
             if (!rawTokens || rawTokens.length === 0) return "";
 
-            const tokens = [];
-            for (let w of rawTokens) {
-                const cleanW = w.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
-                if (!cleanW) continue;
-
-                const bareW = cleanW.replace(/[^\w]/g, '');
-                const shouldReverseChar = (
-                    docHasCharReversal ||
-                    w.includes('ـ') ||
-                    (bareW.length > 1 && (
-                        bareW.endsWith('دلا') || bareW.endsWith('لاا') || bareW.endsWith('بال') ||
-                        bareW.endsWith('يال') || bareW.endsWith('مال') || bareW.endsWith('انلاوم') ||
-                        bareW.startsWith('ة') || bareW.startsWith('ين') || bareW.startsWith('ء')
-                    ))
-                );
-
-                if (shouldReverseChar && bareW.length > 1) {
-                    let leading = "";
-                    let trailing = "";
-                    let core = cleanW;
-                    while (core.length > 0 && PUNCTUATION_SET.has(core[0])) {
-                        leading += core[0];
-                        core = core.slice(1);
-                    }
-                    while (core.length > 0 && PUNCTUATION_SET.has(core[core.length - 1])) {
-                        trailing = core[core.length - 1] + trailing;
-                        core = core.slice(0, -1);
-                    }
-                    const revCore = core.split('').reverse().join('');
-                    tokens.push(leading + revCore + trailing);
-                } else {
-                    tokens.push(cleanW);
-                }
-            }
+            const tokens = rawTokens.map(w => fixArabicWordToken(w)).filter(t => t.length > 0);
 
             if (tokens.length <= 1) return tokens.join(' ');
 
@@ -339,7 +343,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const isReversed = (
                 docIsLtrStream ||
-                cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' || cleanLast === 'الداعي' ||
+                cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' ||
                 lastTok.endsWith('بقلم') || lastTok.endsWith(':') ||
                 firstTok === '،' || firstTok === '؛' || firstTok === '.' || firstTok === ':' ||
                 firstTok.startsWith('،') || firstTok.startsWith('؛') ||
