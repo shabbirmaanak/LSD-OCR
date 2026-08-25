@@ -257,7 +257,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function sanitizeText(text) {
         if (!text) return "";
-        return text.replace(/[\r\u200e\u200f\ufeff\u202a-\u202e\xa0]/g, '');
+        const clean = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        return clean.replace(/[\u200e\u200f\ufeff\u202a-\u202e\xa0]/g, '');
     }
 
     function fixReversedArabicLine(line) {
@@ -515,12 +516,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 let extractedText = data.original_text || "";
                 let convertedText = data.converted_text || "";
                 
-                let fixedInput = autoFixArabicSentenceFlow(extractedText);
-                editor.setInputText(fixedInput);
+                editor.setInputText(extractedText);
                 
                 if (convertedText) {
-                    let fixedOutput = autoFixArabicSentenceFlow(convertedText);
-                    editor.setOutputText(fixedOutput);
+                    editor.setOutputText(convertedText);
                     editor.setStats(data.replacements_count || 0);
                 } else {
                     performLiveConversion();

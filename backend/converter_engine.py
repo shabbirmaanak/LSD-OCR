@@ -102,7 +102,8 @@ def sanitize_text(text: str) -> str:
     """Strips invisible Unicode control characters, carriage returns, and zero-width spaces."""
     if not text:
         return ""
-    return re.sub(r'[\r\u200e\u200f\ufeff\u202a-\u202e\xa0]', '', text)
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    return re.sub(r'[\u200e\u200f\ufeff\u202a-\u202e\xa0]', '', text)
 
 def fix_reversed_arabic_line(line: str) -> str:
     """Reverses LTR Arabic character streams while preserving English text & numbers intact."""
@@ -221,19 +222,24 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
     text = sanitize_text(text)
     lines = text.split('\n')
 
-    # Detect document-level LTR word-sequence reversal across first 15 lines
+    # Detect document-level LTR word-sequence reversal across first 30 lines
     doc_is_word_reversed = False
-    for line in lines[:15]:
-        t = line.strip().split()
+    for line in lines[:30]:
+        clean_l = line.strip()
+        if not clean_l:
+            continue
+        t = clean_l.split()
         if not t:
             continue
-        clean_last = strip_punc(t[-1]) if t else ""
-        clean_first = strip_punc(t[0]) if t else ""
 
-        if clean_last in ['بقلم', 'الاستاذ', 'الشيخ'] or 'بقلم' in t[-1]:
-            doc_is_word_reversed = True
-            break
-        if 'الاول ربيع شهر' in line or 'الله رسول' in line or 'علي عبد ملا' in line or clean_first in ['علي', 'عبد', 'ملا']:
+        clean_last = strip_punc(t[-1])
+        clean_first = strip_punc(t[0])
+
+        if 'بقلم' in clean_l or 'الاستاذ' in clean_l or 'الشيخ' in clean_l:
+            if clean_last in ['بقلم', 'الاستاذ', 'الشيخ'] or 'بقلم' in t[-1] or clean_first in ['علي', 'عبد', 'ملا']:
+                doc_is_word_reversed = True
+                break
+        if 'الاول ربيع شهر' in clean_l or 'الله رسول' in clean_l or 'علي عبد ملا' in clean_l:
             doc_is_word_reversed = True
             break
 
