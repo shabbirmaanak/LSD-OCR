@@ -58,10 +58,13 @@ textarea, input, select {
     unicode-bidi: plaintext !important;
 }
 
-/* Disable OpenType Feature Ligatures */
+/* Enable OpenType Feature Ligatures for Lisan al Dawat & Arabic Fonts */
 textarea, input, select, .font-amiri, .font-scheherazade, #input-editor, #output-editor {
-    font-feature-settings: normal !important;
-    font-variant-ligatures: normal !important;
+    font-feature-settings: "liga" 1, "dlig" 1, "calt" 1, "mset" 1, "ccmp" 1, "init" 1, "medi" 1, "fina" 1, "isol" 1, "rlta" 1 !important;
+    font-variant-ligatures: common-ligatures discretionary-ligatures contextual historical-ligatures !important;
+    text-rendering: optimizeLegibility !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
 }
 
 #input-editor, #output-editor {

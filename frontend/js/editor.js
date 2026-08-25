@@ -37,10 +37,10 @@ class TextEditor {
         }
 
         const btnClear = document.getElementById('btn-clear-input');
-        if (btnClear && this.input) {
+        if (btnClear) {
             btnClear.addEventListener('click', () => {
-                this.input.value = '';
-                this.output.value = '';
+                if (this.input) this.input.value = '';
+                if (this.output) this.output.value = '';
                 this.setStats(0);
             });
         }
@@ -58,11 +58,13 @@ class TextEditor {
     }
 
     getInputText() {
+        if (this.output && this.output.value) return this.output.value;
         return this.input ? this.input.value : "";
     }
 
     setInputText(val) {
         if (this.input) this.input.value = val;
+        if (this.output) this.output.value = val;
     }
 
     setOutputText(val) {
@@ -75,7 +77,7 @@ class TextEditor {
 
     setStats(replacementsCount) {
         if (this.stats) {
-            this.stats.innerHTML = `<span>${replacementsCount} عملية استبدال محولة</span>`;
+            this.stats.innerHTML = `<span>${replacementsCount} Replacements Made</span>`;
         }
     }
 
@@ -85,7 +87,7 @@ class TextEditor {
             .then(() => {
                 const btn = document.getElementById('btn-copy-text');
                 const orig = btn.innerHTML;
-                btn.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> <span>تم النسخ!</span>`;
+                btn.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> <span>Copied!</span>`;
                 setTimeout(() => { btn.innerHTML = orig; }, 2000);
             })
             .catch(err => console.error("Clipboard copy error:", err));

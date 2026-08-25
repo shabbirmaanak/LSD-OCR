@@ -17,63 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupInputEvents();
     setupFontUpload();
     setupActions();
-    setupMobileTabs();
-
-    function setupMobileTabs() {
-        const tabInput = document.getElementById('tab-input');
-        const tabOutput = document.getElementById('tab-output');
-        const tabSettings = document.getElementById('tab-settings');
-
-        const paneInput = document.getElementById('pane-input');
-        const paneOutput = document.getElementById('pane-output');
-        const sectionSettings = document.getElementById('section-settings');
-
-        if (!tabInput || !tabOutput || !tabSettings || !paneInput || !paneOutput) return;
-
-        function setActiveTab(activeTab) {
-            [tabInput, tabOutput, tabSettings].forEach(t => {
-                t.classList.remove('bg-blue-600', 'text-white', 'shadow');
-                t.classList.add('text-slate-300', 'hover:bg-slate-700/60');
-            });
-
-            activeTab.classList.remove('text-slate-300', 'hover:bg-slate-700/60');
-            activeTab.classList.add('bg-blue-600', 'text-white', 'shadow');
-
-            if (window.innerWidth < 1024) {
-                if (activeTab === tabInput) {
-                    paneInput.classList.remove('hidden');
-                    paneOutput.classList.add('hidden');
-                    if (sectionSettings) sectionSettings.classList.add('hidden');
-                } else if (activeTab === tabOutput) {
-                    paneInput.classList.add('hidden');
-                    paneOutput.classList.remove('hidden');
-                    if (sectionSettings) sectionSettings.classList.add('hidden');
-                } else if (activeTab === tabSettings) {
-                    paneInput.classList.add('hidden');
-                    paneOutput.classList.add('hidden');
-                    if (sectionSettings) sectionSettings.classList.remove('hidden');
-                }
-            }
-        }
-
-        tabInput.addEventListener('click', () => setActiveTab(tabInput));
-        tabOutput.addEventListener('click', () => setActiveTab(tabOutput));
-        tabSettings.addEventListener('click', () => setActiveTab(tabSettings));
-
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 1024) {
-                paneInput.classList.remove('hidden');
-                paneOutput.classList.remove('hidden');
-                if (sectionSettings) sectionSettings.classList.remove('hidden');
-            } else {
-                setActiveTab(tabInput);
-            }
-        });
-
-        if (window.innerWidth < 1024) {
-            setActiveTab(tabInput);
-        }
-    }
 
     function setupFontUpload() {
         const btnUploadFont = document.getElementById('btn-upload-font');
@@ -91,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function uploadFontFile(file) {
-        updateStatus(`جاري رفع الخط المخصص ${file.name}...`, true);
+        updateStatus(`Uploading custom font ${file.name}...`, true);
         try {
             const formData = new FormData();
             formData.append('file', file);
@@ -105,15 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.success) {
                 injectFontFace(data.font_name, data.url);
                 addFontOption(data.font_name, true);
-                updateStatus(`تمت إضافة الخط ${data.font_name} بنجاح!`, false);
+                updateStatus(`Font ${data.font_name} added successfully!`, false);
             } else {
-                alert("حدث خطأ أثناء رفع الخط: " + (data.detail || "أمر غير معروف"));
+                alert("Error uploading font: " + (data.detail || "Unknown error"));
             }
         } catch (err) {
             console.error("Font upload error:", err);
-            alert("فشل رفع الخط / Font upload error: " + err.message);
+            alert("Font upload failed: " + err.message);
         } finally {
-            updateStatus("جاهز للتحويل المباشر السريع", false);
+            updateStatus("Ready for instant conversion", false);
         }
     }
 
@@ -170,9 +113,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function setupInputEvents() {
-        const inputArea = document.getElementById('input-editor');
-        if (inputArea) {
-            inputArea.addEventListener('input', () => {
+        const outputEditor = document.getElementById('output-editor');
+        if (outputEditor) {
+            outputEditor.addEventListener('input', () => {
                 performLiveConversion();
             });
         }
@@ -211,15 +154,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const clipboardText = await navigator.clipboard.readText();
                     if (clipboardText) {
-                        editor.setInputText(clipboardText);
+                        editor.setOutputText(clipboardText);
                         performLiveConversion();
-                        updateStatus("تم لصق النص من الحافظة بنجاح!", false);
+                        updateStatus("Text pasted from clipboard successfully!", false);
                     } else {
-                        alert("الحافظة فارغة! لا يوجد نص في الحافظة.");
+                        alert("Clipboard is empty! No text found.");
                     }
                 } catch (err) {
                     console.error("Clipboard paste error:", err);
-                    alert("يمكنك استخدام اختصار المفاتيح (Ctrl+V أو Cmd+V) لصق النص مباشرة في مربع النص.");
+                    alert("You can use Ctrl+V or Cmd+V to paste text directly into the text editor.");
                 }
             });
         }
@@ -358,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const lines = cleanText.split('\n');
 
         let docIsWordReversed = false;
-        const checkLines = lines.slice(0, 15);
+        const checkLines = lines.slice(0, 30);
         for (let l of checkLines) {
             const t = l.trim().split(/\s+/);
             if (!t || t.length === 0 || !t[0]) continue;
@@ -386,8 +329,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const lastWord = stripPunc(tokens[tokens.length - 1]);
 
             const isTrulyCharReversed = (
-                cleanLine.includes('لمضم') || cleanLine.includes('يـعالدلا') ||
-                firstWord === 'لمضم' || firstWord === 'يـعالدلا' ||
+                cleanLine.includes('lem-dm') || cleanLine.includes('يـعالدلا') ||
+                firstWord === 'يـعالدلا' ||
                 (lastWord.endsWith('دلا') && !firstWord.startsWith('ال'))
             );
 
@@ -414,9 +357,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function performLiveConversion() {
-        const rawText = editor.getInputText();
+        const rawText = editor.getOutputText();
         if (!rawText) {
-            editor.setOutputText("");
             editor.setStats(0);
             return;
         }
@@ -426,11 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const rules = ruleManager.getRules();
         
-        // Client-side instant deterministic conversion
         let converted = cleanedText;
         let count = 0;
 
-        // Sort rules by pattern length descending
         const sortedKeys = Object.keys(rules).sort((a, b) => b.length - a.length);
 
         for (let src of sortedKeys) {
@@ -492,8 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function uploadAndConvertFile(file) {
-        updateStatus("جاري رفع واستخراج المستند...", true);
-        showPreloader("جاري استخراج ومعالجة المستند...", "تطبيق قواعد لسان الدعوة وضبط تدفق السطور تلقائياً");
+        updateStatus(`Uploading & extracting ${file.name}...`, true);
+        showPreloader("Extracting & Converting Document...", "Applying Lisan al-Dawat rules and auto-fixing sentence flow");
 
         try {
             const presetSelect = document.getElementById('preset-select');
@@ -513,32 +453,25 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
 
             if (data.success) {
-                let extractedText = data.original_text || "";
-                let convertedText = data.converted_text || "";
+                let convertedText = data.converted_text || data.original_text || "";
                 
-                editor.setInputText(extractedText);
-                
-                if (convertedText) {
-                    editor.setOutputText(convertedText);
-                    editor.setStats(data.replacements_count || 0);
-                } else {
-                    performLiveConversion();
-                }
+                editor.setOutputText(convertedText);
+                editor.setStats(data.replacements_count || 0);
 
-                if (!extractedText && !convertedText) {
-                    alert("ملاحظة: هذا المستند لا يحتوي على نص قابل للتحديد (قد يكون صورة ممسوحة ضوئياً).");
+                if (!convertedText) {
+                    alert("Note: This document does not contain selectable text (it may be a scanned image).");
                 }
                 
-                updateStatus(`تم استخراج وتحويل المستند ${data.filename} بنجاح!`, false);
+                updateStatus(`Document ${data.filename} extracted & converted successfully!`, false);
             } else {
-                alert("حدث خطأ أثناء معالجة المستند: " + (data.detail || "أمر غير معروف"));
+                alert("Error processing document: " + (data.detail || "Unknown error"));
             }
         } catch (err) {
             console.error("File convert error:", err);
-            alert("فشل الاتصال بالخادم / File convert request failed: " + err.message);
+            alert("File convert request failed: " + err.message);
         } finally {
             hidePreloader();
-            updateStatus("جاهز للتحويل المباشر السريع", false);
+            updateStatus("Ready for instant conversion", false);
         }
     }
 
@@ -556,26 +489,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadSampleText() {
-        updateStatus("جاري تحميل النص العينة...", true);
+        updateStatus("Loading sample text...", true);
         try {
             const res = await fetch('/api/sample');
             const data = await res.json();
             if (data.success) {
-                editor.setInputText(data.original_text);
-                editor.setOutputText(data.converted_text);
-                editor.setStats(data.replacements_count);
+                editor.setOutputText(data.converted_text || data.original_text);
+                editor.setStats(data.replacements_count || 0);
             }
         } catch (e) {
             console.error("Sample load error:", e);
         } finally {
-            updateStatus("جاهز للتحويل المباشر السريع", false);
+            updateStatus("Ready for instant conversion", false);
         }
     }
 
     async function exportToDocx() {
         const text = editor.getOutputText();
         if (!text) {
-            alert("لا يوجد نص للتصدير! يرجى تحويل أو كتابة نص أولاً.");
+            alert("No text to export! Please convert or enter text first.");
             return;
         }
 
@@ -583,13 +515,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const fontName = fontSelect ? fontSelect.value : "Amiri";
 
         const payload = {
-            title: "مستند لسان الدعوة المحول",
+            title: "Lisan al-Dawat Converted Document",
             text: text,
             font_name: fontName,
             font_size: 14
         };
 
-        updateStatus("جاري إنشاء وتنسيق مستند وورد (RTL Word .docx)...", true);
+        updateStatus("Generating Word document (.docx)...", true);
 
         try {
             const response = await fetch('/api/export-docx', {
@@ -601,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                throw new Error("تعذر إنشاء مستند وورد");
+                throw new Error("Failed to create Word document");
             }
 
             const blob = await response.blob();
@@ -615,9 +547,9 @@ document.addEventListener('DOMContentLoaded', () => {
             window.URL.revokeObjectURL(url);
         } catch (err) {
             console.error("Docx export error:", err);
-            alert("حدث خطأ أثناء تصدير مستند وورد: " + err.message);
+            alert("Error exporting Word document: " + err.message);
         } finally {
-            updateStatus("جاهز للتحويل المباشر السريع", false);
+            updateStatus("Ready for instant conversion", false);
         }
     }
 
