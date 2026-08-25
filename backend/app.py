@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from backend.converter_engine import convert_text, auto_fix_arabic_sentence_flow, PRESETS, ALKANZ_NORMAL_RULES
+from backend.converter_engine import convert_text, PRESETS, ALKANZ_NORMAL_RULES
 from backend.docx_generator import generate_lsd_docx
 from backend.doc_parser import extract_text_from_file
 
@@ -86,9 +86,6 @@ async def convert_document(
             
         if not raw_text and not image_base64:
             raw_text = ""
-
-        if raw_text:
-            raw_text = auto_fix_arabic_sentence_flow(raw_text)
             
         # Parse custom rules if provided
         rules_dict = None
