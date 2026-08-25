@@ -4,6 +4,7 @@ Replaces legacy double-character keyboard codes with proper Unicode Lisan al Daw
 Preserves exact original document text, layout, and line structures.
 """
 
+import re
 from typing import Dict, List, Tuple, Optional
 
 # Preset 1: Alkanz Normal Keyboard Layout
@@ -20,6 +21,16 @@ ALKANZ_NORMAL_RULES: Dict[str, str] = {
     "ضض": "ڈ",
     "ظظ": "ڑ",
     "؛": "چهے",
+    # Legacy Al Kanz / Bohra PUA & ligature glyphs
+    "善": "هو",
+    "善": "هو",
+    "啣": "هو",
+    "周": "الله",
+    "呈": "رضي الله عنه",
+    "吸": "رحمة الله عليه",
+    "咞": "عليه السلام",
+    "吆": "صلعم",
+    "叱": "هو",
     # QWERTY keys -> Unicode LSD
     ";;": "گ",
     "ss": "ے",
@@ -43,6 +54,7 @@ ALKANZ_URDU_RULES: Dict[str, str] = {
     "ضض": "ڈ",
     "ظظ": "ڑ",
     "سس": "ے",
+    "善": "هو",
 }
 
 # Preset 3: Kanzmarjan Normal Keyboard Layout
@@ -59,6 +71,7 @@ KANZMARJAN_RULES: Dict[str, str] = {
     "pp": "چ",
     "qq": "ٹ",
     "ww": "ں",
+    "善": "هو",
 }
 
 # Preset 4: Amiri Urdu Layout
@@ -72,6 +85,7 @@ AMIRI_URDU_RULES: Dict[str, str] = {
     "ڈ": "ڈ",
     "ڑ": "ڑ",
     "ژ": "ژ",
+    "善": "هو",
 }
 
 PRESETS = {
@@ -94,8 +108,6 @@ PRESETS = {
 }
 
 
-import re
-
 PUNCTUATION_CHARS = {'،', '؛', '.', ':', '!', '؟', '"', '(', ')', '[', ']', '•'}
 
 def sanitize_text(text: str) -> str:
@@ -111,7 +123,6 @@ def fix_reversed_arabic_line(line: str) -> str:
     if not clean_line.strip():
         return ""
     
-    # Preserve page numbers / English metadata headers
     if re.match(r'^\s*Page\s+\d+\s+of\s+\d+\s*$', clean_line, re.IGNORECASE):
         return clean_line.strip()
 
@@ -119,7 +130,6 @@ def fix_reversed_arabic_line(line: str) -> str:
     if not has_arabic:
         return clean_line.strip()
 
-    # Protect English tokens from character reversal
     placeholders = {}
     def replacer(match):
         key = f"__ENG{len(placeholders)}__"
@@ -137,13 +147,7 @@ def fix_reversed_arabic_line(line: str) -> str:
 
 
 def rejoin_spaced_arabic_letters(line: str) -> str:
-    """
-    Rejoins isolated Arabic letters separated by inter-letter spaces inside words.
-    Example: 'الم ن ك ت ر ق م' -> 'الم نكت رقم'
-    Example: 'ت س ل س ل' -> 'تسلسل'
-    Example: 'الم ع بـاس' -> 'العباس'
-    Example: 'بن ع بـد' -> 'بن عبد'
-    """
+    """Rejoins isolated Arabic letters separated by inter-letter spaces inside words."""
     clean_line = line.replace('ـ', '').replace('\u200c', '').replace('\u200d', '')
     if not clean_line.strip():
         return ""
@@ -214,7 +218,6 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
     Automatic Punctuation-Aware Arabic Sentence Flow & Word/Character Order Normalizer.
     Supports Type A (LTR Reversed Character Streams), Type B (Disconnected Inter-Letter Spaces),
     and Type C (Word-Sequence LTR Reversed Streams e.g. 'علي عبد ملا ... : بقلم').
-    Strips Tatweels (ـ) and fixes punctuation placement.
     """
     if not text:
         return ""
@@ -232,13 +235,12 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
         if not t:
             continue
 
-        clean_last = strip_punc(t[-1])
         clean_first = strip_punc(t[0])
+        clean_last = strip_punc(t[-1])
 
-        if 'بقلم' in clean_l or 'الاستاذ' in clean_l or 'الشيخ' in clean_l:
-            if clean_last in ['بقلم', 'الاستاذ', 'الشيخ'] or 'بقلم' in t[-1] or clean_first in ['علي', 'عبد', 'ملا']:
-                doc_is_word_reversed = True
-                break
+        if clean_first in ['علي', 'عبد', 'ملا'] or clean_last in ['بقلم', 'الاستاذ', 'الشيخ'] or 'بقلم' in clean_l:
+            doc_is_word_reversed = True
+            break
         if 'الاول ربيع شهر' in clean_l or 'الله رسول' in clean_l or 'علي عبد ملا' in clean_l:
             doc_is_word_reversed = True
             break
@@ -279,23 +281,17 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
         if single_letter_count >= 3:
             fixed_lines.append(rejoin_spaced_arabic_letters(line))
         else:
-            # Leave normal Arabic line order 100% UNTOUCHED!
             fixed_lines.append(clean_line.strip())
 
     return "\n".join(fixed_lines)
 
 
 def clean_legacy_artifacts(text: str) -> str:
-    """
-    Cleans unwanted character artifacts and normalizes sentence flow while preserving exact text formatting.
-    """
+    """Cleans unwanted character artifacts and normalizes sentence flow."""
     if not text:
         return ""
 
-    # Automatically fix sentence flow and punctuation placement
     text = auto_fix_arabic_sentence_flow(text)
-
-    # Clean redundant Tatweels and zero-width non-joiner / joiner artifacts
     cleaned = text.replace("ـ", "").replace("\u200c", "").replace("\u200d", "").replace("`", "")
     return cleaned
 
@@ -305,18 +301,11 @@ def convert_text(
     rules: Optional[Dict[str, str]] = None,
     preset_key: str = "alkanz_normal"
 ) -> Tuple[str, int]:
-    """
-    Deterministically converts input text based on the provided character replacement rules.
-    Preserves exact word order, paragraphs, and formatting.
-    Returns (converted_text, total_replacements_made).
-    """
+    """Deterministically converts input text based on mapping rules."""
     if not text:
         return "", 0
 
-    # Determine mapping dictionary
     mapping_dict = rules if rules is not None else PRESETS.get(preset_key, {}).get("rules", ALKANZ_NORMAL_RULES)
-    
-    # Sort keys by length descending to ensure longer multi-char matches (e.g. "كك" or ";;") take precedence over single chars
     sorted_patterns = sorted(mapping_dict.keys(), key=lambda k: len(k), reverse=True)
     
     converted_text = clean_legacy_artifacts(text)
