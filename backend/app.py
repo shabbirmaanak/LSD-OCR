@@ -5,6 +5,7 @@ FastAPI Application Backend for Lisan al Dawat (Alkanz / Kanzmarjan / Unicode) N
 import os
 import json
 import base64
+import asyncio
 from typing import List, Optional, Dict, Any
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -79,7 +80,7 @@ async def convert_document(
                     b64_str = base64.b64encode(content).decode('utf-8')
                     image_base64 = f"data:image/{ext if ext != 'jpg' else 'jpeg'};base64,{b64_str}"
                 
-                raw_text = extract_text_from_file(content, filename)
+                raw_text = await asyncio.to_thread(extract_text_from_file, content, filename)
         elif text:
             raw_text = text
             

@@ -21,7 +21,13 @@ def extract_text_from_file(file_bytes: bytes, filename: str) -> str:
     elif ext == 'pdf':
         return parse_pdf(file_bytes)
     elif ext in ['png', 'jpg', 'jpeg', 'webp', 'bmp', 'tiff']:
-        # For image files in non-AI mode, return empty string so image preview is shown
+        try:
+            from backend.ocr_engine import extract_text_from_image
+            res = extract_text_from_image(file_bytes)
+            if res.get("success"):
+                return res.get("text", "")
+        except Exception as e:
+            print(f"Image OCR error: {e}")
         return ""
     else:
         # Default text format (.txt, .rtf, .html, etc.)
