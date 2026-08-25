@@ -1,6 +1,6 @@
-/* Custom CSS styles for Lisan al Dawat OCR App */
+/* Custom CSS styles for Lisan al Dawat OCR App - Light Creamy Theme */
 
-@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&family=Inter:wght@400;500;600;700&display=swap');
 
 /* Bundled Font Faces for Lisan al Dawat Script */
 @font-face {
@@ -46,8 +46,9 @@
 html, body {
     direction: rtl;
     text-align: right;
-    background-color: #0f172a;
-    color: #f8fafc;
+    background-color: #f7f4ee;
+    color: #1e293b;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 /* Force strict Right-to-Left alignment for text areas, input fields, and editors */
@@ -80,23 +81,23 @@ textarea, input, select, .font-amiri, .font-scheherazade, #input-editor, #output
     font-family: 'Scheherazade New', 'Amiri', serif;
 }
 
-/* Custom RTL Scrollbar */
+/* Custom Light Theme RTL Scrollbar */
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.6);
+    background: #eae4d9;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(51, 65, 85, 0.8);
+    background: #c7beaf;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(71, 85, 105, 1);
+    background: #a39785;
 }
 
 /* Bohra Blue Accent Highlights */
@@ -105,7 +106,7 @@ textarea, input, select, .font-amiri, .font-scheherazade, #input-editor, #output
 }
 
 .text-bohra-gold {
-    color: #f59e0b;
+    color: #b45309;
 }
 
 /* Mobile Responsive Media Queries */
@@ -115,8 +116,8 @@ textarea, input, select, .font-amiri, .font-scheherazade, #input-editor, #output
         gap: 0.75rem !important;
     }
     
-    .min-h-\[550px\] {
-        min-height: calc(100vh - 210px) !important;
+    .min-h-\[500px\] {
+        min-height: calc(100vh - 190px) !important;
     }
     
     textarea {

@@ -359,8 +359,53 @@ document.addEventListener('DOMContentLoaded', () => {
         editor.setStats(count);
     }
 
+    function showPreloader(titleText, subText) {
+        const preloader = document.getElementById('upload-preloader');
+        const titleEl = document.getElementById('preloader-title');
+        const subEl = document.getElementById('preloader-subtext');
+        const percentEl = document.getElementById('preloader-percent-text');
+        const circlePath = document.getElementById('preloader-progress-circle');
+
+        if (!preloader) return;
+        if (titleText && titleEl) titleEl.textContent = titleText;
+        if (subText && subEl) subEl.textContent = subText;
+
+        if (percentEl) percentEl.textContent = '0%';
+        if (circlePath) circlePath.setAttribute('stroke-dasharray', '0, 100');
+
+        preloader.classList.remove('hidden');
+
+        let currentPct = 0;
+        if (window.preloaderInterval) clearInterval(window.preloaderInterval);
+        
+        window.preloaderInterval = setInterval(() => {
+            if (currentPct < 90) {
+                currentPct += Math.floor(Math.random() * 15) + 10;
+                if (currentPct > 90) currentPct = 90;
+                if (percentEl) percentEl.textContent = `${currentPct}%`;
+                if (circlePath) circlePath.setAttribute('stroke-dasharray', `${currentPct}, 100`);
+            }
+        }, 150);
+    }
+
+    function hidePreloader() {
+        const preloader = document.getElementById('upload-preloader');
+        const percentEl = document.getElementById('preloader-percent-text');
+        const circlePath = document.getElementById('preloader-progress-circle');
+
+        if (window.preloaderInterval) clearInterval(window.preloaderInterval);
+
+        if (percentEl) percentEl.textContent = '100%';
+        if (circlePath) circlePath.setAttribute('stroke-dasharray', '100, 100');
+
+        setTimeout(() => {
+            if (preloader) preloader.classList.add('hidden');
+        }, 250);
+    }
+
     async function uploadAndConvertFile(file) {
         updateStatus("جاري رفع واستخراج المستند...", true);
+        showPreloader("جاري استخراج ومعالجة المستند...", "تطبيق قواعد لسان الدعوة وضبط تدفق السطور تلقائياً");
 
         try {
             const presetSelect = document.getElementById('preset-select');
@@ -403,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("File convert error:", err);
             alert("فشل الاتصال بالخادم / File convert request failed: " + err.message);
         } finally {
+            hidePreloader();
             updateStatus("جاهز للتحويل المباشر السريع", false);
         }
     }

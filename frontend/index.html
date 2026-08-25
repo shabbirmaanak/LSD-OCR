@@ -17,21 +17,21 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+<body class="bg-[#f7f4ee] text-slate-800 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
 
     <!-- Navigation Header -->
-    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-5 py-3 shadow-lg">
+    <header class="bg-white/90 backdrop-blur-md border-b border-[#e6dfd5] sticky top-0 z-40 px-5 py-3 shadow-sm">
         <div class="max-w-[1600px] mx-auto flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="/static/img/logo.png" alt="Lisan Al Dawat Logo" class="w-10 h-10 rounded-xl border border-amber-500/30 object-contain bg-amber-50/10 p-0.5 shadow-md hover:scale-105 transition">
-                <h1 class="text-lg font-bold text-white tracking-wide">
+                <img src="/static/img/logo.png" alt="Lisan Al Dawat Logo" class="w-10 h-10 rounded-xl border border-amber-600/30 object-contain bg-amber-50/20 p-0.5 shadow-sm hover:scale-105 transition">
+                <h1 class="text-lg font-bold text-[#0f4c81] tracking-wide">
                     محول لسان الدعوة
                 </h1>
             </div>
 
             <div class="flex items-center gap-3">
-                <button id="btn-load-sample" class="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-sm">
-                    <i class="fa-solid fa-file-lines text-amber-400"></i>
+                <button id="btn-load-sample" class="bg-[#f3ede3] hover:bg-[#eae3d7] text-[#854d0e] border border-[#d6cbba] px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-2 shadow-sm">
+                    <i class="fa-solid fa-file-lines text-amber-700"></i>
                     <span>تجربة نص عينة</span>
                 </button>
             </div>
@@ -42,32 +42,32 @@
     <main class="flex-1 flex flex-col max-w-[1600px] w-full mx-auto p-4 gap-4 overflow-hidden">
 
         <!-- Mobile Multi-Screen Navigation Tabs (Visible on mobile/tablet < 1024px) -->
-        <div id="mobile-tab-bar" class="flex lg:hidden bg-slate-800 border border-slate-700 p-1 rounded-xl gap-1 text-xs shadow-md">
-            <button id="tab-input" class="flex-1 py-2 px-3 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 bg-blue-600 text-white shadow">
+        <div id="mobile-tab-bar" class="flex lg:hidden bg-[#eae4d9] border border-[#d8d0c2] p-1 rounded-xl gap-1 text-xs shadow-sm">
+            <button id="tab-input" class="flex-1 py-2 px-3 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 bg-[#0f4c81] text-white shadow">
                 <i class="fa-solid fa-file-lines text-amber-300"></i>
                 <span>النص الأصلي</span>
             </button>
-            <button id="tab-output" class="flex-1 py-2 px-3 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/60">
-                <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
+            <button id="tab-output" class="flex-1 py-2 px-3 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 text-slate-700 hover:text-slate-900 hover:bg-white/60">
+                <i class="fa-solid fa-wand-magic-sparkles text-emerald-700"></i>
                 <span>النص المحول</span>
             </button>
-            <button id="tab-settings" class="flex-1 py-2 px-3 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 text-slate-300 hover:text-white hover:bg-slate-700/60">
-                <i class="fa-solid fa-sliders text-amber-400"></i>
+            <button id="tab-settings" class="flex-1 py-2 px-3 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 text-slate-700 hover:text-slate-900 hover:bg-white/60">
+                <i class="fa-solid fa-sliders text-amber-700"></i>
                 <span>الإعدادات</span>
             </button>
         </div>
 
         <!-- Preset & Rule Configuration Bar -->
-        <section id="section-settings" class="bg-slate-800/80 border border-slate-700/70 rounded-2xl p-4 shadow-xl">
+        <section id="section-settings" class="bg-white border border-[#e4ded5] rounded-2xl p-4 shadow-sm">
             <div class="flex flex-col lg:flex-row items-center justify-between gap-4">
                 
                 <!-- Preset Selector -->
                 <div class="flex items-center gap-3 w-full lg:w-auto">
-                    <label class="text-xs font-bold text-amber-400 flex items-center gap-1.5 whitespace-nowrap">
+                    <label class="text-xs font-bold text-[#854d0e] flex items-center gap-1.5 whitespace-nowrap">
                         <i class="fa-solid fa-keyboard"></i>
                         <span>نمط لوحة المفاتيح:</span>
                     </label>
-                    <select id="preset-select" class="bg-slate-900 border border-slate-700 text-slate-200 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-amber-500 w-full lg:w-72">
+                    <select id="preset-select" class="bg-[#f7f4ee] border border-[#d8d0c2] text-slate-800 rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none focus:border-[#0f4c81] w-full lg:w-72">
                         <option value="alkanz_normal" selected>Alkanz Normal Layout</option>
                         <option value="alkanz_urdu">Alkanz Urdu Layout</option>
                         <option value="kanzmarjan">Kanzmarjan Layout</option>
@@ -77,13 +77,13 @@
                 </div>
 
                 <!-- Rule Table Toggle & File Upload -->
-                <div class="flex items-center gap-3 w-full lg:w-auto justify-end flex-wrap sm:flex-nowrap">
-                    <button id="btn-toggle-rules" class="bg-slate-700/70 hover:bg-slate-700 text-slate-200 border border-slate-600 px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2">
-                        <i class="fa-solid fa-sliders text-amber-400"></i>
+                <div class="flex items-center gap-2 sm:gap-3 w-full lg:w-auto justify-end flex-wrap sm:flex-nowrap">
+                    <button id="btn-toggle-rules" class="bg-[#f3ede3] hover:bg-[#eae3d7] text-slate-800 border border-[#d6cbba] px-3 py-2 rounded-xl text-xs font-medium transition flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-sliders text-[#854d0e]"></i>
                         <span>عرض/تعديل القواعد</span>
                     </button>
 
-                    <button id="btn-upload-top" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-4 py-2 rounded-xl text-xs shadow transition cursor-pointer flex items-center gap-2">
+                    <button id="btn-upload-top" class="bg-[#0f4c81] hover:bg-[#0c3c66] text-white font-semibold px-4 py-2 rounded-xl text-xs shadow-sm transition cursor-pointer flex items-center gap-2">
                         <i class="fa-solid fa-file-arrow-up"></i>
                         <span>رفع مستند (.docx, .txt, .pdf)</span>
                     </button>
@@ -92,16 +92,16 @@
             </div>
 
             <!-- Expandable Rules Editor Table -->
-            <div id="rules-editor-panel" class="hidden mt-4 pt-4 border-t border-slate-700/80">
+            <div id="rules-editor-panel" class="hidden mt-4 pt-4 border-t border-[#e6dfd5]">
                 <div class="flex items-center justify-between mb-2 text-xs">
-                    <h3 class="font-bold text-amber-300">جدول قواعد الاستبدال المباشر (Direct Character Replacements):</h3>
-                    <button id="btn-add-rule" class="text-xs bg-slate-700 hover:bg-slate-600 text-emerald-400 px-2.5 py-1 rounded transition flex items-center gap-1">
+                    <h3 class="font-bold text-[#854d0e]">جدول قواعد الاستبدال المباشر (Direct Character Replacements):</h3>
+                    <button id="btn-add-rule" class="text-xs bg-[#f3ede3] hover:bg-[#eae3d7] text-emerald-800 border border-emerald-300 px-2.5 py-1 rounded transition flex items-center gap-1">
                         <i class="fa-solid fa-plus"></i>
                         <span>إضافة قاعدة جديدة</span>
                     </button>
                 </div>
 
-                <div class="max-h-48 overflow-y-auto bg-slate-950/80 rounded-xl p-3 border border-slate-700">
+                <div class="max-h-48 overflow-y-auto bg-[#fbf9f5] rounded-xl p-3 border border-[#e4ded5]">
                     <div id="rules-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 text-xs">
                         <!-- Rule items generated via JS -->
                     </div>
@@ -110,12 +110,12 @@
         </section>
 
         <!-- Status & Stats Bar -->
-        <div id="status-bar" class="bg-slate-800/90 border border-slate-700 px-4 py-2 rounded-xl flex items-center justify-between text-xs text-slate-300">
+        <div id="status-bar" class="bg-white border border-[#e4ded5] px-4 py-2.5 rounded-xl flex items-center justify-between text-xs text-slate-700 shadow-sm">
             <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="status-text">جاهز للتحويل المباشر السريع</span>
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                <span id="status-text" class="font-medium">جاهز للتحويل المباشر السريع</span>
             </div>
-            <div id="replacement-stats" class="text-amber-400 font-semibold">
+            <div id="replacement-stats" class="text-[#854d0e] font-bold">
                 <span>0 عمليات استبدال</span>
             </div>
         </div>
@@ -124,54 +124,54 @@
         <section class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-[500px] overflow-hidden">
             
             <!-- Left Pane: Input Document / Raw Text -->
-            <div id="pane-input" class="bg-slate-800/80 border border-slate-700/70 rounded-2xl flex flex-col overflow-hidden shadow-xl">
+            <div id="pane-input" class="bg-white border border-[#e4ded5] rounded-2xl flex flex-col overflow-hidden shadow-sm">
                 <!-- Pane Header -->
-                <div class="bg-slate-900/80 px-4 py-2.5 border-b border-slate-700 flex items-center justify-between text-xs text-slate-300">
+                <div class="bg-[#faf7f2] px-3.5 py-2.5 border-b border-[#e6dfd5] flex flex-wrap items-center justify-between gap-2 text-xs text-slate-700">
                     <div class="flex items-center gap-2">
-                        <i class="fa-solid fa-file-lines text-amber-400"></i>
-                        <span class="font-semibold">النص الأصلي / المستند المدخل (Original Input)</span>
+                        <i class="fa-solid fa-file-lines text-[#0f4c81]"></i>
+                        <span class="font-bold text-[#0f4c81]">النص الأصلي (Original Input)</span>
                     </div>
 
                     <!-- Input Controls: Upload, Paste, Clear -->
-                    <div class="flex items-center gap-2">
-                        <button id="btn-upload-pane" class="bg-blue-600/90 hover:bg-blue-500 text-white font-medium px-2.5 py-1 rounded-lg text-[11px] shadow transition cursor-pointer flex items-center gap-1.5" title="رفع مستند (.docx, .txt, .pdf)">
+                    <div class="flex items-center gap-1.5">
+                        <button id="btn-upload-pane" class="bg-[#0f4c81] hover:bg-[#0c3c66] text-white font-medium px-2.5 py-1 rounded-lg text-[11px] shadow-sm transition cursor-pointer flex items-center gap-1" title="رفع مستند (.docx, .txt, .pdf)">
                             <i class="fa-solid fa-file-arrow-up text-blue-200"></i>
                             <span>رفع مستند</span>
                         </button>
                         <input type="file" id="file-input-pane" accept=".docx,.txt,.pdf,.png,.jpg,.jpeg,.webp,.bmp,.tiff" class="hidden">
 
-                        <button id="btn-paste-input" class="bg-slate-800 hover:bg-slate-700 text-amber-300 font-medium px-2.5 py-1 rounded-lg text-[11px] border border-slate-700 transition flex items-center gap-1.5" title="لصق النص من الحافظة">
-                            <i class="fa-solid fa-paste text-amber-400"></i>
+                        <button id="btn-paste-input" class="bg-[#f3ede3] hover:bg-[#eae3d7] text-[#854d0e] font-medium px-2.5 py-1 rounded-lg text-[11px] border border-[#d6cbba] transition flex items-center gap-1" title="لصق النص من الحافظة">
+                            <i class="fa-solid fa-paste text-[#854d0e]"></i>
                             <span>لصق</span>
                         </button>
 
-                        <button id="btn-clear-input" class="text-slate-400 hover:text-rose-400 transition ml-1" title="مسح النص">
+                        <button id="btn-clear-input" class="text-slate-400 hover:text-rose-600 transition px-1" title="مسح النص">
                             <i class="fa-solid fa-trash-can text-sm"></i>
                         </button>
                     </div>
                 </div>
 
                 <!-- Input Textarea & Drag/Drop Container -->
-                <div id="input-drop-zone" class="flex-1 p-3 bg-slate-950/70 flex flex-col relative overflow-hidden transition">
+                <div id="input-drop-zone" class="flex-1 p-3 bg-[#fbf9f5] flex flex-col relative overflow-hidden transition">
                     
                     <!-- Drag and Drop Overlay Indicator -->
-                    <div id="drop-overlay" class="hidden absolute inset-0 bg-blue-600/20 backdrop-blur-sm border-2 border-dashed border-blue-400 z-30 flex flex-col items-center justify-center gap-3 text-blue-200 pointer-events-none">
-                        <i class="fa-solid fa-cloud-arrow-up text-5xl animate-bounce text-blue-300"></i>
+                    <div id="drop-overlay" class="hidden absolute inset-0 bg-blue-600/10 backdrop-blur-sm border-2 border-dashed border-blue-600 z-30 flex flex-col items-center justify-center gap-3 text-blue-900 pointer-events-none">
+                        <i class="fa-solid fa-cloud-arrow-up text-5xl animate-bounce text-blue-700"></i>
                         <p class="font-bold text-sm">أفلت المستند هنا للتحويل الفوري (.docx, .txt, .pdf)</p>
                     </div>
 
-                    <textarea id="input-editor" dir="rtl" class="w-full h-full bg-transparent border-0 text-slate-100 font-amiri text-lg leading-relaxed focus:outline-none resize-none" placeholder="أدخل النص الأصلي أو الصقه هنا... (مثل: ككتاب, سسند, ثثول)... يمكنك أيضاً سحب وإفلات أو رفع ملف docx أو txt أو pdf هنا"></textarea>
+                    <textarea id="input-editor" dir="rtl" class="w-full h-full bg-transparent border-0 text-slate-800 font-amiri text-lg leading-relaxed focus:outline-none resize-none" placeholder="أدخل النص الأصلي أو الصقه هنا... (مثل: ككتاب, سسند, ثثول)... يمكنك أيضاً سحب وإفلات أو رفع ملف docx أو txt أو pdf هنا"></textarea>
                 </div>
             </div>
 
             <!-- Right Pane: Converted Lisan al Dawat Unicode Text -->
-            <div id="pane-output" class="bg-slate-800/80 border border-slate-700/70 rounded-2xl flex flex-col overflow-hidden shadow-xl">
+            <div id="pane-output" class="bg-white border border-[#e4ded5] rounded-2xl flex flex-col overflow-hidden shadow-sm">
                 <!-- Editor Header Toolbar -->
-                <div class="bg-slate-900/80 px-4 py-2.5 border-b border-slate-700 flex items-center justify-between text-xs">
-                    <div class="flex items-center gap-2">
-                        <span class="font-semibold text-emerald-400">النص المحول (Unicode Lisan al Dawat)</span>
+                <div class="bg-[#faf7f2] px-3.5 py-2.5 border-b border-[#e6dfd5] flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="font-bold text-emerald-800 whitespace-nowrap">النص المحول (Unicode)</span>
                         
-                        <select id="font-select" dir="ltr" class="bg-slate-800 border border-slate-700 rounded text-slate-200 text-xs px-2.5 py-1 focus:outline-none focus:border-amber-500 font-sans font-semibold">
+                        <select id="font-select" dir="ltr" class="bg-white border border-[#d8d0c2] rounded-lg text-slate-800 text-xs px-2 py-1 focus:outline-none focus:border-[#0f4c81] font-sans font-semibold">
                             <option value="Al Kanz" selected>Al Kanz</option>
                             <option value="Al Fatemi">Al Fatemi</option>
                             <option value="Kanz al Marjaan">Kanz al Marjaan</option>
@@ -182,36 +182,57 @@
                             </optgroup>
                         </select>
 
-                        <button id="btn-upload-font" class="bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 px-2 py-1 rounded text-xs transition flex items-center gap-1" title="رفع خط مخصص (TTF, OTF, WOFF)">
+                        <button id="btn-upload-font" class="bg-[#f3ede3] hover:bg-[#eae3d7] text-[#854d0e] border border-[#d6cbba] px-2 py-1 rounded-lg text-xs transition flex items-center gap-1 whitespace-nowrap" title="رفع خط مخصص (TTF, OTF, WOFF)">
                             <i class="fa-solid fa-font text-xs"></i>
-                            <span>+ رفع خط</span>
+                            <span>+ خط</span>
                         </button>
                         <input type="file" id="font-file-input" accept=".ttf,.otf,.woff,.woff2" class="hidden">
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex items-center gap-2">
-                        <button id="btn-copy-text" class="bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 px-2.5 py-1 rounded transition flex items-center gap-1.5">
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <button id="btn-copy-text" class="bg-[#f3ede3] hover:bg-[#eae3d7] text-slate-800 border border-[#d6cbba] px-2.5 py-1 rounded-lg transition flex items-center gap-1" title="نسخ النص المحول">
                             <i class="fa-solid fa-copy"></i>
                             <span>نسخ</span>
                         </button>
 
-                        <button id="btn-export-docx" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-semibold px-3 py-1 rounded shadow transition flex items-center gap-1.5">
+                        <button id="btn-export-docx" class="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold px-2.5 py-1 rounded-lg shadow-sm transition flex items-center gap-1 text-xs whitespace-nowrap" title="تصدير المستند إلى وورد">
                             <i class="fa-solid fa-file-word text-sm"></i>
-                            <span>تصدير Word (.docx)</span>
+                            <span>تصدير Word</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- Converted Text Output -->
-                <div class="flex-1 p-3 bg-slate-950/90 flex flex-col">
-                    <textarea id="output-editor" dir="rtl" class="w-full h-full bg-transparent border-0 text-slate-100 font-amiri text-lg leading-relaxed focus:outline-none resize-none" placeholder="سيظهر النص المحول هنا فوراً... (مثلاً: گتاب, ےند, پول)..." readonly></textarea>
+                <div class="flex-1 p-3 bg-[#fbf9f5] flex flex-col">
+                    <textarea id="output-editor" dir="rtl" class="w-full h-full bg-transparent border-0 text-slate-800 font-amiri text-lg leading-relaxed focus:outline-none resize-none" placeholder="سيظهر النص المحول هنا فوراً... (مثلاً: گتاب, ےند, پول)..." readonly></textarea>
                 </div>
             </div>
 
         </section>
 
     </main>
+
+    <!-- Aesthetic Uploading Preloader Overlay Modal -->
+    <div id="upload-preloader" class="hidden fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-stone-200/80 rounded-3xl p-6 sm:p-8 max-w-xs sm:max-w-sm w-full shadow-2xl flex flex-col items-center text-center gap-4 animate-in fade-in zoom-in duration-200">
+            <!-- Circular Animated Progress Fill Ring -->
+            <div class="relative w-20 h-20 flex items-center justify-center">
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                    <path class="text-stone-100" stroke-width="3" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <path id="preloader-progress-circle" class="text-emerald-600 transition-all duration-300 ease-out" stroke-dasharray="0, 100" stroke-width="3.2" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center flex-col">
+                    <span id="preloader-percent-text" class="text-lg font-bold text-stone-800 font-sans">0%</span>
+                </div>
+            </div>
+
+            <div>
+                <h3 id="preloader-title" class="font-bold text-stone-800 text-sm sm:text-base mb-1">جاري استخراج ومعالجة المستند...</h3>
+                <p id="preloader-subtext" class="text-xs text-stone-500">تطبيق قواعد لسان الدعوة وضبط تدفق السطور تلقائياً</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="/static/js/ruleManager.js"></script>
