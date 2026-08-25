@@ -1,6 +1,7 @@
 """
 Non-AI Deterministic Rule Engine for Lisan al Dawat (Alkanz / Kanzmarjan / Unicode) Conversion.
 Replaces legacy double-character keyboard codes and Bohra extended codepoints with proper Unicode Lisan al Dawat characters.
+100% Deterministic - Zero line mangling or automatic flow heuristics.
 """
 
 import re
@@ -78,8 +79,6 @@ PRESETS = {
 }
 
 PUNCTUATION_CHARS = {'،', '؛', '.', ':', '!', '؟', '"', '(', ')', '[', ']', '•'}
-ARABIC_OPENERS = {"اهنا", "ان", "اذ", "امان", "انار", "اصف", "ال", "اگر", "عن", "من", "في", "على", "ما", "قد"}
-ARABIC_CLOSERS = {"چهے", "چهے.", "چهے،", "استلقى", "استلقى،،", "انار.", "حاتم", "حاتم.", "عنها"}
 
 def sanitize_text(text: str) -> str:
     """Strips invisible Unicode control characters and normalizes carriage returns."""
@@ -122,36 +121,6 @@ def reverse_line_order(text: str) -> str:
     lines = text.split('\n')
     lines.reverse()
     return "\n".join(lines)
-
-
-def is_line_reversed(line: str) -> bool:
-    """Detects if a single line of text is word-reversed."""
-    tokens = line.strip().split()
-    if len(tokens) <= 1:
-        return False
-    first_tok = re.sub(r"[^\w]", "", tokens[0])
-    last_tok = re.sub(r"[^\w]", "", tokens[-1])
-    if last_tok in ARABIC_OPENERS and first_tok not in ARABIC_OPENERS:
-        return True
-    if first_tok in ARABIC_CLOSERS and last_tok not in ARABIC_CLOSERS:
-        return True
-    if tokens[0] in {",", "،", ".", "!"}:
-        return True
-    return False
-
-
-def smart_fix_sentence_flow(text: str) -> str:
-    """Automatically detects and flips word-reversed lines in Arabic/LSD text."""
-    if not text:
-        return ""
-    lines = text.split('\n')
-    fixed = []
-    for line in lines:
-        if is_line_reversed(line):
-            fixed.append(reverse_word_flow(line))
-        else:
-            fixed.append(line)
-    return "\n".join(fixed)
 
 
 def rejoin_spaced_arabic_letters(text: str) -> str:
@@ -219,8 +188,5 @@ def convert_text(
         if count > 0:
             converted_text = converted_text.replace(source_pat, target_pat)
             total_replacements += count
-
-    # Run smart sentence flow check to fix word-reversed PDF streams automatically
-    converted_text = smart_fix_sentence_flow(converted_text)
 
     return converted_text, total_replacements
