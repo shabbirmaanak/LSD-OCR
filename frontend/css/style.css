@@ -2,9 +2,52 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Scheherazade+New:wght@400;700&display=swap');
 
+/* Bundled Font Faces for Lisan al Dawat Script */
+@font-face {
+    font-family: 'Al Kanz';
+    src: url('/static/fonts/Al-Kanz.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Al Fatemi';
+    src: url('/static/fonts/Al-Fatemi.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Kanz al Marjaan';
+    src: url('/static/fonts/Kanz-al-Marjaan.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Kanz al Yaqoot';
+    src: url('/static/fonts/Kanz-al-Yaqoot.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Kanz al Lulu';
+    src: url('/static/fonts/Kanz-al-Lulu.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 html, body {
     direction: rtl;
     text-align: right;
+    background-color: #0f172a;
+    color: #f8fafc;
 }
 
 /* Force strict Right-to-Left alignment for text areas, input fields, and editors */
@@ -12,6 +55,15 @@ textarea, input, select {
     direction: rtl !important;
     text-align: right !important;
     unicode-bidi: plaintext !important;
+}
+
+/* Enable OpenType Feature Ligatures for Arabic & Lisan al Dawat Fonts */
+textarea, input, select, .font-amiri, .font-scheherazade, #input-editor, #output-editor {
+    font-feature-settings: "liga" 1, "dlig" 1, "calt" 1, "mset" 1, "ccmp" 1, "init" 1, "medi" 1, "fina" 1, "isol" 1, "rlta" 1 !important;
+    font-variant-ligatures: common-ligatures discretionary-ligatures contextual historical-ligatures !important;
+    text-rendering: optimizeLegibility !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
 }
 
 #input-editor, #output-editor {
@@ -68,7 +120,7 @@ textarea, input, select {
     }
     
     textarea {
-        font-size: 1rem !important;
+        font-size: 1.05rem !important;
         line-height: 1.8 !important;
     }
 
