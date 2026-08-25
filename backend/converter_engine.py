@@ -4,9 +4,10 @@ Replaces legacy double-character keyboard codes and Bohra extended codepoints wi
 """
 
 import re
+import unicodedata
 from typing import Dict, Tuple, Optional
 
-# Preset 1: Alkanz Normal Keyboard Layout + Bohra Font Mappings
+# Preset 1: Alkanz Normal Keyboard Layout + Bohra Extended Codepoint Mappings
 ALKANZ_NORMAL_RULES: Dict[str, str] = {
     # Double Arabic character codes -> Unicode LSD
     "كك": "گ",
@@ -21,11 +22,18 @@ ALKANZ_NORMAL_RULES: Dict[str, str] = {
     "ظظ": "ڑ",
     "؛": "چهے",
     
-    # Bohra / Alkanz extended Latin codepoint mappings
-    "Ţ": "ے",
-    "ţ": "ے",
-    "Ṣ": "گ",
-    "ṣ": "گ",
+    # All Bohra / Alkanz extended Latin T variants -> ے (Bari Ye)
+    "Ţ": "ے", "ţ": "ے", "Ț": "ے", "ț": "ے", "Ṭ": "ے", "ṭ": "ے",
+    "T\u0327": "ے", "t\u0327": "ے", "T\u0326": "ے", "t\u0326": "ے", "T\u0323": "ے", "t\u0323": "ے",
+    "T": "ے", "t": "ے",
+    
+    # All Bohra / Alkanz extended Latin S variants -> گ (Gaf)
+    "Ṣ": "گ", "ṣ": "گ", "Ş": "گ", "ş": "گ", "Ș": "گ", "ș": "گ",
+    "S\u0327": "گ", "s\u0327": "گ", "S\u0326": "گ", "s\u0326": "گ", "S\u0323": "گ", "s\u0323": "گ",
+    
+    # Bohra special ligatures
+    "善": "هو", "善": "هو", "啣": "هو", "叱": "هو",
+    "周": "الله", "呈": "رضي الله عنه", "吸": "رحمة الله عليه", "咞": "عليه السلام", "吆": "صلعم",
     
     # QWERTY double-key codes -> Unicode LSD
     ";;": "گ",
@@ -42,18 +50,24 @@ ALKANZ_NORMAL_RULES: Dict[str, str] = {
 ALKANZ_URDU_RULES: Dict[str, str] = {
     "ثث": "پ", "حح": "چ", "كك": "گ", "طط": "ٹ", "نن": "ں",
     "صص": "ژ", "ضض": "ڈ", "ظظ": "ڑ", "سس": "ے",
-    "Ţ": "ے", "ţ": "ے", "Ṣ": "گ", "ṣ": "گ"
+    "Ţ": "ے", "ţ": "ے", "Ț": "ے", "ț": "ے", "Ṭ": "ے", "ṭ": "ے", "T": "ے", "t": "ے",
+    "Ṣ": "گ", "ṣ": "گ", "Ş": "گ", "ş": "گ", "Ș": "گ", "ș": "گ",
+    "善": "هو", "善": "هو", "啣": "هو", "叱": "هو"
 }
 
 KANZMARJAN_RULES: Dict[str, str] = {
     "كك": "گ", "سس": "ے", "ثث": "پ", "حح": "چ", "طط": "ٹ", "نن": "ں",
-    "Ţ": "ے", "ţ": "ے", "Ṣ": "گ", "ṣ": "گ",
+    "Ţ": "ے", "ţ": "ے", "Ț": "ے", "ț": "ے", "Ṭ": "ے", "ṭ": "ے", "T": "ے", "t": "ے",
+    "Ṣ": "گ", "ṣ": "گ", "Ş": "گ", "ş": "گ", "Ș": "گ", "ș": "گ",
+    "善": "هو", "善": "هو", "啣": "هو", "叱": "هو",
     ";;": "گ", "ss": "ے", "ee": "پ", "pp": "چ", "qq": "ٹ", "ww": "ں"
 }
 
 AMIRI_URDU_RULES: Dict[str, str] = {
     "گ": "گ", "پ": "پ", "چ": "چ", "ٹ": "ٹ", "ے": "ے", "ں": "ں", "ڈ": "ڈ", "ڑ": "ڑ", "ژ": "ژ",
-    "Ţ": "ے", "ţ": "ے", "Ṣ": "گ", "ṣ": "گ"
+    "Ţ": "ے", "ţ": "ے", "Ț": "ے", "ț": "ے", "Ṭ": "ے", "ṭ": "ے", "T": "ے", "t": "ے",
+    "Ṣ": "گ", "ṣ": "گ", "Ş": "گ", "ş": "گ", "Ș": "گ", "ș": "گ",
+    "善": "هو", "善": "هو", "啣": "هو", "叱": "هو"
 }
 
 PRESETS = {
@@ -70,7 +84,8 @@ def sanitize_text(text: str) -> str:
     if not text:
         return ""
     text = text.replace('\r\n', '\n').replace('\r', '\n')
-    return re.sub(r'[\u200e\u200f\ufeff\u202a-\u202e\xa0]', '', text)
+    text = re.sub(r'[\u200e\u200f\ufeff\u202a-\u202e\xa0]', '', text)
+    return unicodedata.normalize('NFC', text)
 
 
 def reverse_word_flow(line: str) -> str:
