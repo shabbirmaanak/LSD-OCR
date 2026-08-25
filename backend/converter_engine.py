@@ -106,8 +106,8 @@ def sanitize_text(text: str) -> str:
 
 def auto_fix_arabic_sentence_flow(text: str) -> str:
     """
-    Automatic Punctuation-Aware Arabic Sentence Flow & Word Order Normalizer.
-    Fixes LTR reversed word streams, attaches punctuation (commas, colons, full stops)
+    Automatic Punctuation-Aware Arabic Sentence Flow & Word/Character Order Normalizer.
+    Strips Tatweels (ـ), fixes LTR reversed character and word streams, attaches punctuation
     properly after words, and prevents disoriented punctuation placement.
     """
     if not text:
@@ -116,8 +116,10 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
     text = sanitize_text(text)
     lines = text.split('\n')
     
-    # Document-level LTR stream detection across the first 15 lines
+    # Document-level LTR stream & character-reversal detection across first 15 lines
     doc_is_ltr_stream = False
+    doc_has_char_reversal = False
+
     for line in lines[:15]:
         t = line.strip().split()
         if not t:
@@ -127,10 +129,15 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
         
         if clean_last in ['بقلم', 'الاستاذ', 'الأستاذ'] or t[-1].endswith(':بقلم') or t[-1].endswith('بقلم'):
             doc_is_ltr_stream = True
-            break
         if clean_first in ['علي', 'عبد', 'ملا'] and any('بقلم' in w for w in t):
             doc_is_ltr_stream = True
-            break
+            
+        for word in t:
+            clean_w = re.sub(r'[^\w]', '', word)
+            if 'ـ' in word or clean_w.endswith('دلا') or clean_w.endswith('لاا') or clean_w.endswith('بال') or clean_w.endswith('انلاوم'):
+                doc_has_char_reversal = True
+                doc_is_ltr_stream = True
+                break
 
     fixed_lines = []
     for line in lines:
@@ -138,9 +145,47 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
             fixed_lines.append("")
             continue
 
-        tokens = line.strip().split()
+        raw_tokens = line.strip().split()
+        if not raw_tokens:
+            fixed_lines.append("")
+            continue
+
+        # Normalize character-level reversal inside words & strip Tatweels
+        tokens = []
+        for w in raw_tokens:
+            clean_w = w.replace('ـ', '').replace('\u200c', '').replace('\u200d', '')
+            if not clean_w:
+                continue
+
+            bare_w = re.sub(r'[^\w]', '', clean_w)
+            should_reverse_char = (
+                doc_has_char_reversal or
+                'ـ' in w or
+                (len(bare_w) > 1 and (
+                    bare_w.endswith('دلا') or bare_w.endswith('لاا') or bare_w.endswith('بال') or
+                    bare_w.endswith('يال') or bare_w.endswith('مال') or bare_w.endswith('انلاوم') or
+                    bare_w.startswith('ة') or bare_w.startswith('ين') or bare_w.startswith('ء')
+                ))
+            )
+
+            if should_reverse_char and len(bare_w) > 1:
+                leading = ""
+                trailing = ""
+                core = clean_w
+                while core and core[0] in PUNCTUATION_CHARS:
+                    leading += core[0]
+                    core = core[1:]
+                while core and core[-1] in PUNCTUATION_CHARS:
+                    trailing = core[-1] + trailing
+                    core = core[:-1]
+                
+                rev_core = core[::-1]
+                tokens.append(leading + rev_core + trailing)
+            else:
+                tokens.append(clean_w)
+
         if len(tokens) <= 1:
-            fixed_lines.append(line.strip())
+            fixed_lines.append(" ".join(tokens))
             continue
 
         first_tok = tokens[0]
@@ -151,7 +196,7 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
 
         line_is_reversed = (
             doc_is_ltr_stream or
-            clean_last in ['بقلم', 'الاستاذ', 'الأستاذ'] or
+            clean_last in ['بقلم', 'الاستاذ', 'الأستاذ', 'الداعي'] or
             last_tok.endswith('بقلم') or last_tok.endswith(':') or
             first_tok in ['،', '؛', '.', ':', '،'] or
             first_tok.startswith('،') or first_tok.startswith('؛') or

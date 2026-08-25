@@ -266,6 +266,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const lines = cleanText.split('\n');
         
         let docIsLtrStream = false;
+        let docHasCharReversal = false;
+
         const checkLines = lines.slice(0, 15);
         for (let l of checkLines) {
             const t = l.trim().split(/\s+/);
@@ -275,18 +277,61 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' || t[t.length - 1].endsWith('بقلم')) {
                 docIsLtrStream = true;
-                break;
             }
             if ((cleanFirst === 'علي' || cleanFirst === 'عبد' || cleanFirst === 'ملا') && t.some(w => w.includes('بقلم'))) {
                 docIsLtrStream = true;
-                break;
+            }
+            for (let word of t) {
+                const cleanW = word.replace(/[^\w]/g, '');
+                if (word.includes('ـ') || cleanW.endsWith('دلا') || cleanW.endsWith('لاا') || cleanW.endsWith('بال') || cleanW.endsWith('انلاوم')) {
+                    docHasCharReversal = true;
+                    docIsLtrStream = true;
+                    break;
+                }
             }
         }
 
         const fixedLines = lines.map(line => {
             if (!line.trim()) return "";
-            const tokens = line.trim().split(/\s+/);
-            if (tokens.length <= 1) return line.trim();
+            const rawTokens = line.trim().split(/\s+/);
+            if (!rawTokens || rawTokens.length === 0) return "";
+
+            const tokens = [];
+            for (let w of rawTokens) {
+                const cleanW = w.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
+                if (!cleanW) continue;
+
+                const bareW = cleanW.replace(/[^\w]/g, '');
+                const shouldReverseChar = (
+                    docHasCharReversal ||
+                    w.includes('ـ') ||
+                    (bareW.length > 1 && (
+                        bareW.endsWith('دلا') || bareW.endsWith('لاا') || bareW.endsWith('بال') ||
+                        bareW.endsWith('يال') || bareW.endsWith('مال') || bareW.endsWith('انلاوم') ||
+                        bareW.startsWith('ة') || bareW.startsWith('ين') || bareW.startsWith('ء')
+                    ))
+                );
+
+                if (shouldReverseChar && bareW.length > 1) {
+                    let leading = "";
+                    let trailing = "";
+                    let core = cleanW;
+                    while (core.length > 0 && PUNCTUATION_SET.has(core[0])) {
+                        leading += core[0];
+                        core = core.slice(1);
+                    }
+                    while (core.length > 0 && PUNCTUATION_SET.has(core[core.length - 1])) {
+                        trailing = core[core.length - 1] + trailing;
+                        core = core.slice(0, -1);
+                    }
+                    const revCore = core.split('').reverse().join('');
+                    tokens.push(leading + revCore + trailing);
+                } else {
+                    tokens.push(cleanW);
+                }
+            }
+
+            if (tokens.length <= 1) return tokens.join(' ');
 
             const firstTok = tokens[0] || "";
             const lastTok = tokens[tokens.length - 1] || "";
@@ -294,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const isReversed = (
                 docIsLtrStream ||
-                cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' ||
+                cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' || cleanLast === 'الداعي' ||
                 lastTok.endsWith('بقلم') || lastTok.endsWith(':') ||
                 firstTok === '،' || firstTok === '؛' || firstTok === '.' || firstTok === ':' ||
                 firstTok.startsWith('،') || firstTok.startsWith('؛') ||
