@@ -216,69 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return clean.replace(/[\u200e\u200f\ufeff\u202a-\u202e\xa0]/g, '');
     }
 
-    function fixReversedArabicLine(line) {
-        const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
-        if (!cleanLine.trim()) return "";
-
-        if (/^\s*Page\s+\d+\s+of\s+\d+\s*$/i.test(cleanLine)) {
-            return cleanLine.trim();
-        }
-
-        const hasArabic = /[\u0600-\u06ff]/.test(cleanLine);
-        if (!hasArabic) return cleanLine.trim();
-
-        const placeholders = {};
-        let engCount = 0;
-        const protectedLine = cleanLine.replace(/[a-zA-Z]+/g, match => {
-            const key = `__ENG${engCount++}__`;
-            placeholders[key] = match;
-            return key;
-        });
-
-        let rev = protectedLine.split('').reverse().join('');
-        for (let key in placeholders) {
-            const revKey = key.split('').reverse().join('');
-            rev = rev.replace(revKey, placeholders[key]);
-        }
-        return rev.trim();
-    }
-
-    function rejoinSpacedArabicLetters(line) {
-        const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
-        if (!cleanLine.trim()) return "";
-
-        const tokens = cleanLine.trim().split(/\s+/);
-        const merged = [];
-        let buffer = "";
-
-        for (let tok of tokens) {
-            const cleanT = tok.replace(/[^\w]/g, '');
-            const hasArabic = /[\u0600-\u06ff]/.test(cleanT);
-            const isLetterPiece = hasArabic && cleanT.length <= 2 && !PUNCTUATION_SET.has(tok);
-
-            if (isLetterPiece) {
-                buffer += tok;
-            } else {
-                if (buffer) {
-                    merged.push(buffer);
-                    buffer = "";
-                }
-                merged.push(tok);
-            }
-        }
-
-        if (buffer) {
-            merged.push(buffer);
-        }
-        return merged.join(' ');
-    }
-
     function fixWordReversedLine(line) {
-        const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '').replace(/`/g, '');
-        if (!cleanLine.trim()) return "";
-
-        const tokens = cleanLine.trim().split(/\s+/);
-        if (tokens.length <= 1) return cleanLine.trim();
+        if (!line || !line.trim()) return "";
+        const tokens = line.trim().split(/\s+/);
+        if (tokens.length <= 1) return line.trim();
 
         tokens.reverse();
 
@@ -294,87 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let res = cleaned.join(' ');
         res = res.replace(/\s+([،؛.:!?])/g, '$1');
-        res = res.replace(/\s+/g, ' ').trim();
-
-        if (res.length > 0 && (res[0] === '،' || res[0] === '؛') && res.split(/\s+/).length > 2) {
-            res = res.slice(1).trim() + ' ' + res[0];
-        }
-        return res;
-    }
-
-    function stripPunc(str) {
-        if (!str) return '';
-        return str.replace(/[\s\p{P}\p{S}]/gu, '');
-    }
-
-    function isArabicWordReversed(text) {
-        if (!text) return false;
-        const lines = text.split('\n').filter(l => l.trim().length > 0);
-        if (!lines || lines.length === 0) return false;
-
-        let score = 0;
-        const keywordsEnd = new Set(["بقلم", "الاستاذ", "الشيخ", "شهر", "عالم", "اسلام", "ربيع", "مؤمنين", "علي", "عبد", "ملا", "چاول", "شكر", "دلكشي", "انار", "صلوات", "تناول", "رسول", "تلاوت", "تعليم"]);
-
-        const checkLines = lines.slice(0, 30);
-        for (let l of checkLines) {
-            const t = l.trim().split(/\s+/);
-            if (!t || t.length === 0 || !t[0]) continue;
-            const lastTok = stripPunc(t[t.length - 1]);
-            const firstTok = stripPunc(t[0]);
-
-            if (keywordsEnd.has(lastTok) || ["بقلم", "شهر", "عالم", "ربيع", "اسلام", "مؤمنين"].some(k => lastTok.includes(k))) {
-                score += 2;
-            }
-            if (["ائي", "ال", "تو", "ان", "ن", "واسط", "چ", "علي", "عبد", "ملا"].includes(firstTok)) {
-                score += 1;
-            }
-        }
-        return score >= 1;
-    }
-
-    function autoFixArabicSentenceFlow(text) {
-        if (!text) return "";
-        const cleanText = sanitizeText(text);
-        const lines = cleanText.split('\n');
-
-        const docIsWordReversed = isArabicWordReversed(text);
-
-        const fixedLines = lines.map(line => {
-            const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '').replace(/`/g, '');
-            if (!cleanLine.trim()) return "";
-
-            const tokens = cleanLine.trim().split(/\s+/);
-            if (!tokens || tokens.length === 0) return "";
-
-            const firstWord = stripPunc(tokens[0]);
-            const lastWord = stripPunc(tokens[tokens.length - 1]);
-
-            const isTrulyCharReversed = (
-                cleanLine.includes('lem-dm') || cleanLine.includes('يـعالدلا') ||
-                firstWord === 'يـعالدلا' ||
-                (lastWord.endsWith('دلا') && !firstWord.startsWith('ال'))
-            );
-
-            if (isTrulyCharReversed) {
-                return fixReversedArabicLine(line);
-            }
-
-            if (docIsWordReversed || lastWord === 'بقلم' || lastWord === 'الاستاذ' || lastWord === 'الشيخ' || tokens[tokens.length - 1].includes('بقلم')) {
-                return fixWordReversedLine(line);
-            }
-
-            const singleLetterCount = tokens.filter(t => {
-                const c = t.replace(/[^\w]/g, '');
-                return c.length === 1 && /[\u0600-\u06ff]/.test(c);
-            }).length;
-
-            if (singleLetterCount >= 3) {
-                return rejoinSpacedArabicLetters(line);
-            }
-
-            return cleanLine.trim();
-        });
-        return fixedLines.join('\n');
+        return res.replace(/\s+/g, ' ').trim();
     }
 
     function performLiveConversion() {
@@ -384,12 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const normalizedText = autoFixArabicSentenceFlow(rawText);
-        let cleanedText = normalizedText.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '').replace(/`/g, '');
-
         const rules = ruleManager.getRules();
-        
-        let converted = cleanedText;
+        let converted = sanitizeText(rawText);
         let count = 0;
 
         const sortedKeys = Object.keys(rules).sort((a, b) => b.length - a.length);
@@ -454,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function uploadAndConvertFile(file) {
         updateStatus(`Uploading & extracting ${file.name}...`, true);
-        showPreloader("Extracting & Converting Document...", "Applying Lisan al-Dawat rules and auto-fixing sentence flow");
+        showPreloader("Extracting & Converting Document...", "Applying Lisan al-Dawat rules and preserving original layout");
 
         try {
             const presetSelect = document.getElementById('preset-select');
