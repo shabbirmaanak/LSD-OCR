@@ -1,7 +1,6 @@
 """
 Non-AI Deterministic Rule Engine for Lisan al Dawat (Alkanz / Kanzmarjan / Unicode) Conversion.
 Replaces legacy double-character keyboard codes with proper Unicode Lisan al Dawat characters.
-100% pure, predictable, zero-distortion conversion.
 """
 
 import re
@@ -21,25 +20,13 @@ ALKANZ_NORMAL_RULES: Dict[str, str] = {
     "ضض": "ڈ",
     "ظظ": "ڑ",
     "؛": "چهے",
-    # Legacy Al Kanz / Bohra PUA & ligature glyphs
-    "善": "هو",
-    "善": "هو",
-    "啣": "هو",
-    "周": "الله",
-    "呈": "رضي الله عنه",
-    "吸": "رحمة الله عليه",
-    "咞": "عليه السلام",
-    "吆": "صلعم",
-    "叱": "هو",
-    # QWERTY keys -> Unicode LSD
+    # QWERTY double-key codes -> Unicode LSD
     ";;": "گ",
     "ss": "ے",
     "ee": "پ",
     "pp": "چ",
     "qq": "ٹ",
     "ww": "ں",
-    "T": "ے",
-    "t": "ے",
     "//": "ء",
     "''": "،",
     "\"\"": "؛"
@@ -47,16 +34,16 @@ ALKANZ_NORMAL_RULES: Dict[str, str] = {
 
 ALKANZ_URDU_RULES: Dict[str, str] = {
     "ثث": "پ", "حح": "چ", "كك": "گ", "طط": "ٹ", "نن": "ں",
-    "صص": "ژ", "ضض": "ڈ", "ظظ": "ڑ", "سس": "ے", "T": "ے", "t": "ے", "善": "هو"
+    "صص": "ژ", "ضض": "ڈ", "ظظ": "ڑ", "سس": "ے"
 }
 
 KANZMARJAN_RULES: Dict[str, str] = {
     "كك": "گ", "سس": "ے", "ثث": "پ", "حح": "چ", "طط": "ٹ", "نن": "ں",
-    ";;": "گ", "ss": "ے", "ee": "پ", "pp": "چ", "qq": "ٹ", "ww": "ں", "T": "ے", "t": "ے", "善": "هو"
+    ";;": "گ", "ss": "ے", "ee": "پ", "pp": "چ", "qq": "ٹ", "ww": "ں"
 }
 
 AMIRI_URDU_RULES: Dict[str, str] = {
-    "گ": "گ", "پ": "پ", "چ": "چ", "ٹ": "ٹ", "ے": "ے", "ں": "ں", "ڈ": "ڈ", "ڑ": "ڑ", "ژ": "ژ", "T": "ے", "t": "ے", "善": "هو"
+    "گ": "گ", "پ": "پ", "چ": "چ", "ٹ": "ٹ", "ے": "ے", "ں": "ں", "ڈ": "ڈ", "ڑ": "ڑ", "ژ": "ژ"
 }
 
 PRESETS = {
@@ -151,6 +138,7 @@ def convert_text(
             mapping_dict = preset_val
     else:
         mapping_dict = ALKANZ_NORMAL_RULES
+
     sorted_patterns = sorted(mapping_dict.keys(), key=lambda k: len(k), reverse=True)
 
     converted_text = sanitized
