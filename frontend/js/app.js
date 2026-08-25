@@ -167,6 +167,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        const btnReverseFlow = document.getElementById('btn-reverse-flow');
+        if (btnReverseFlow) {
+            btnReverseFlow.addEventListener('click', () => {
+                const currentText = editor.getOutputText();
+                if (!currentText) return;
+                const lines = currentText.split('\n');
+                const flipped = lines.map(line => fixWordReversedLine(line));
+                editor.setOutputText(flipped.join('\n'));
+                updateStatus("Line flow flipped successfully!", false);
+            });
+        }
+
         // Drag and drop events
         const dropZone = document.getElementById('input-drop-zone');
         const dropOverlay = document.getElementById('drop-overlay');
@@ -295,28 +307,37 @@ document.addEventListener('DOMContentLoaded', () => {
         return str.replace(/[\s\p{P}\p{S}]/gu, '');
     }
 
+    function isArabicWordReversed(text) {
+        if (!text) return false;
+        const lines = text.split('\n').filter(l => l.trim().length > 0);
+        if (!lines || lines.length === 0) return false;
+
+        let score = 0;
+        const keywordsEnd = new Set(["بقلم", "الاستاذ", "الشيخ", "شهر", "عالم", "اسلام", "ربيع", "مؤمنين", "علي", "عبد", "ملا", "چاول", "شكر", "دلكشي", "انار", "صلوات", "تناول", "رسول", "تلاوت", "تعليم"]);
+
+        const checkLines = lines.slice(0, 30);
+        for (let l of checkLines) {
+            const t = l.trim().split(/\s+/);
+            if (!t || t.length === 0 || !t[0]) continue;
+            const lastTok = stripPunc(t[t.length - 1]);
+            const firstTok = stripPunc(t[0]);
+
+            if (keywordsEnd.has(lastTok) || ["بقلم", "شهر", "عالم", "ربيع", "اسلام", "مؤمنين"].some(k => lastTok.includes(k))) {
+                score += 2;
+            }
+            if (["ائي", "ال", "تو", "ان", "ن", "واسط", "چ", "علي", "عبد", "ملا"].includes(firstTok)) {
+                score += 1;
+            }
+        }
+        return score >= 1;
+    }
+
     function autoFixArabicSentenceFlow(text) {
         if (!text) return "";
         const cleanText = sanitizeText(text);
         const lines = cleanText.split('\n');
 
-        let docIsWordReversed = false;
-        const checkLines = lines.slice(0, 30);
-        for (let l of checkLines) {
-            const t = l.trim().split(/\s+/);
-            if (!t || t.length === 0 || !t[0]) continue;
-            const cleanLast = stripPunc(t[t.length - 1]);
-            const cleanFirst = stripPunc(t[0]);
-
-            if (cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الشيخ' || t[t.length - 1].includes('بقلم')) {
-                docIsWordReversed = true;
-                break;
-            }
-            if (l.includes('الاول ربيع شهر') || l.includes('الله رسول') || l.includes('علي عبد ملا') || cleanFirst === 'علي' || cleanFirst === 'عبد' || cleanFirst === 'ملا') {
-                docIsWordReversed = true;
-                break;
-            }
-        }
+        const docIsWordReversed = isArabicWordReversed(text);
 
         const fixedLines = lines.map(line => {
             const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '').replace(/`/g, '');

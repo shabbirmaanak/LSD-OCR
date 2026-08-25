@@ -56,6 +56,8 @@ ALKANZ_URDU_RULES: Dict[str, str] = {
     "ضض": "ڈ",
     "ظظ": "ڑ",
     "سس": "ے",
+    "T": "ے",
+    "t": "ے",
     "善": "هو",
 }
 
@@ -73,6 +75,8 @@ KANZMARJAN_RULES: Dict[str, str] = {
     "pp": "چ",
     "qq": "ٹ",
     "ww": "ں",
+    "T": "ے",
+    "t": "ے",
     "善": "هو",
 }
 
@@ -87,12 +91,14 @@ AMIRI_URDU_RULES: Dict[str, str] = {
     "ڈ": "ڈ",
     "ڑ": "ڑ",
     "ژ": "ژ",
+    "T": "ے",
+    "t": "ے",
     "善": "هو",
 }
 
 PRESETS = {
     "alkanz_normal": {
-        "name": "Alkanz Normal (كك➔گ, سس➔ے, ثث➔پ)",
+        "name": "Alkanz Normal (كك➔گ, سس➔ے, ثث➔پ, T➔ے)",
         "rules": ALKANZ_NORMAL_RULES
     },
     "alkanz_urdu": {
@@ -215,6 +221,33 @@ def strip_punc(s: str) -> str:
     return re.sub(r'[^\w\u0600-\u06ff]', '', s)
 
 
+def is_arabic_word_reversed(text: str) -> bool:
+    """Detects multi-signal LTR word stream reversal in Arabic/LSD documents."""
+    if not text:
+        return False
+    lines = [l.strip() for l in text.split('\n') if l.strip()]
+    if not lines:
+        return False
+    
+    score = 0
+    keywords_end = {"بقلم", "الاستاذ", "الشيخ", "شهر", "عالم", "اسلام", "ربيع", "مؤمنين", "علي", "عبد", "ملا", "چاول", "شكر", "دلكشي", "انار", "صلوات", "تناول", "رسول", "تلاوت", "تعليم"}
+    
+    for line in lines[:30]:
+        tokens = line.split()
+        if not tokens:
+            continue
+        
+        last_tok = strip_punc(tokens[-1])
+        first_tok = strip_punc(tokens[0])
+        
+        if last_tok in keywords_end or any(k in last_tok for k in ["بقلم", "شهر", "عالم", "ربيع", "اسلام", "مؤمنين"]):
+            score += 2
+        if first_tok in {"ائي", "ال", "تو", "ان", "ن", "واسط", "چ", "علي", "عبد", "ملا"}:
+            score += 1
+
+    return score >= 1
+
+
 def auto_fix_arabic_sentence_flow(text: str) -> str:
     """
     Automatic Punctuation-Aware Arabic Sentence Flow & Word/Character Order Normalizer.
@@ -227,25 +260,7 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
     text = sanitize_text(text)
     lines = text.split('\n')
 
-    # Detect document-level LTR word-sequence reversal across first 30 lines
-    doc_is_word_reversed = False
-    for line in lines[:30]:
-        clean_l = line.strip()
-        if not clean_l:
-            continue
-        t = clean_l.split()
-        if not t:
-            continue
-
-        clean_first = strip_punc(t[0])
-        clean_last = strip_punc(t[-1])
-
-        if clean_first in ['علي', 'عبد', 'ملا'] or clean_last in ['بقلم', 'الاستاذ', 'الشيخ'] or 'بقلم' in clean_l:
-            doc_is_word_reversed = True
-            break
-        if 'الاول ربيع شهر' in clean_l or 'الله رسول' in clean_l or 'علي عبد ملا' in clean_l:
-            doc_is_word_reversed = True
-            break
+    doc_is_word_reversed = is_arabic_word_reversed(text)
 
     fixed_lines = []
     for line in lines:
