@@ -260,116 +260,53 @@ document.addEventListener('DOMContentLoaded', () => {
         return text.replace(/[\r\u200e\u200f\ufeff\u202a-\u202e\xa0]/g, '');
     }
 
-    function fixArabicWordToken(w) {
-        if (!w) return "";
-        const cleanW = w.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
-        if (!cleanW) return "";
+    function fixReversedArabicLine(line) {
+        const cleanLine = line.replace(/ـ/g, '').replace(/\u200c/g, '').replace(/\u200d/g, '');
+        if (!cleanLine.trim()) return "";
 
-        if (/[a-zA-Z0-9]/.test(cleanW)) {
-            return cleanW;
+        if (/^\s*Page\s+\d+\s+of\s+\d+\s*$/i.test(cleanLine)) {
+            return cleanLine.trim();
         }
 
-        const bareW = cleanW.replace(/[^\w]/g, '');
-        if (bareW.length <= 1) return cleanW;
+        const hasArabic = /[\u0600-\u06ff]/.test(cleanLine);
+        if (!hasArabic) return cleanLine.trim();
 
-        if (bareW.startsWith('ال') || bareW.startsWith('الم') || bareW.startsWith('سيد') ||
-            bareW.startsWith('مول') || bareW.startsWith('مف') || bareW.startsWith('حس') ||
-            bareW.startsWith('باو') || bareW.startsWith('صاح') || bareW.startsWith('امير')) {
-            return cleanW;
+        const placeholders = {};
+        let engCount = 0;
+        const protectedLine = cleanLine.replace(/[a-zA-Z]+/g, match => {
+            const key = `__ENG${engCount++}__`;
+            placeholders[key] = match;
+            return key;
+        });
+
+        let rev = protectedLine.split('').reverse().join('');
+        for (let key in placeholders) {
+            const revKey = key.split('').reverse().join('');
+            rev = rev.replace(revKey, placeholders[key]);
         }
-
-        const shouldReverse = (
-            w.includes('ـ') ||
-            bareW.endsWith('دلا') || bareW.endsWith('لاا') || bareW.endsWith('بال') ||
-            bareW.endsWith('يال') || bareW.endsWith('مال') || bareW.endsWith('انلاوم') ||
-            bareW.startsWith('هش') || bareW.startsWith('فل') || bareW.startsWith('سف') ||
-            bareW.startsWith('ود') || bareW.startsWith('عر') || bareW.startsWith('طلو')
-        );
-
-        if (shouldReverse) {
-            let leading = "";
-            let trailing = "";
-            let core = cleanW;
-            while (core.length > 0 && PUNCTUATION_SET.has(core[0])) {
-                leading += core[0];
-                core = core.slice(1);
-            }
-            while (core.length > 0 && PUNCTUATION_SET.has(core[core.length - 1])) {
-                trailing = core[core.length - 1] + trailing;
-                core = core.slice(0, -1);
-            }
-            const revCore = core.split('').reverse().join('');
-            return leading + revCore + trailing;
-        }
-
-        return cleanW;
+        return rev.trim();
     }
 
     function autoFixArabicSentenceFlow(text) {
         if (!text) return "";
         const cleanText = sanitizeText(text);
         const lines = cleanText.split('\n');
-        
-        let docIsLtrStream = false;
+
+        let docIsReversed = false;
         const checkLines = lines.slice(0, 15);
         for (let l of checkLines) {
-            const t = l.trim().split(/\s+/);
-            if (!t || t.length === 0 || !t[0]) continue;
-            const cleanLast = t[t.length - 1].replace(/[^\w]/g, '');
-            const cleanFirst = t[0].replace(/[^\w]/g, '');
-            
-            if (cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' || t[t.length - 1].endsWith('بقلم')) {
-                docIsLtrStream = true;
-                break;
-            }
-            if ((cleanFirst === 'علي' || cleanFirst === 'عبد' || cleanFirst === 'ملا') && t.some(w => w.includes('بقلم'))) {
-                docIsLtrStream = true;
+            if (l.includes('ـ') || l.includes('لمضم') || l.includes('يـعالدلا') || l.trim().endsWith('دلا') || l.trim().endsWith('لاا')) {
+                docIsReversed = true;
                 break;
             }
         }
 
         const fixedLines = lines.map(line => {
             if (!line.trim()) return "";
-            const rawTokens = line.trim().split(/\s+/);
-            if (!rawTokens || rawTokens.length === 0) return "";
-
-            const tokens = rawTokens.map(w => fixArabicWordToken(w)).filter(t => t.length > 0);
-
-            if (tokens.length <= 1) return tokens.join(' ');
-
-            const firstTok = tokens[0] || "";
-            const lastTok = tokens[tokens.length - 1] || "";
-            const cleanLast = lastTok.replace(/[^\w]/g, '');
-
-            const isReversed = (
-                docIsLtrStream ||
-                cleanLast === 'بقلم' || cleanLast === 'الاستاذ' || cleanLast === 'الأستاذ' ||
-                lastTok.endsWith('بقلم') || lastTok.endsWith(':') ||
-                firstTok === '،' || firstTok === '؛' || firstTok === '.' || firstTok === ':' ||
-                firstTok.startsWith('،') || firstTok.startsWith('؛') ||
-                lastTok.endsWith('،') || lastTok.endsWith('؛') || lastTok.endsWith(',')
-            );
-
-            let wordList = isReversed ? tokens.reverse() : tokens;
-
-            const cleaned = wordList.map(tok => {
-                let leading = "";
-                let core = tok;
-                while (core.length > 1 && PUNCTUATION_SET.has(core[0])) {
-                    leading += core[0];
-                    core = core.slice(1);
-                }
-                return core + leading;
-            });
-
-            let resLine = cleaned.join(' ');
-            resLine = resLine.replace(/\s+([،؛.:!?])/g, '$1');
-            resLine = resLine.replace(/\s+/g, ' ').trim();
-
-            if (resLine.length > 0 && (resLine[0] === '،' || resLine[0] === '؛') && resLine.split(/\s+/).length > 2) {
-                resLine = resLine.slice(1).trim() + ' ' + resLine[0];
+            if (docIsReversed || line.includes('ـ') || line.includes('لمضم') || line.trim().endsWith('دلا')) {
+                return fixReversedArabicLine(line);
             }
-            return resLine;
+            return line.trim();
         });
         return fixedLines.join('\n');
     }

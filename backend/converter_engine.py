@@ -104,49 +104,35 @@ def sanitize_text(text: str) -> str:
         return ""
     return re.sub(r'[\r\u200e\u200f\ufeff\u202a-\u202e\xa0]', '', text)
 
-def fix_arabic_word_token(w: str) -> str:
-    """Fixes Tatweels and word-internal character reversal strictly on reversed Arabic tokens."""
-    clean_w = w.replace('ـ', '').replace('\u200c', '').replace('\u200d', '')
-    if not clean_w:
+def fix_reversed_arabic_line(line: str) -> str:
+    """Reverses LTR Arabic character streams while preserving English text & numbers intact."""
+    clean_line = line.replace('ـ', '').replace('\u200c', '').replace('\u200d', '')
+    if not clean_line.strip():
         return ""
+    
+    # Preserve page numbers / English metadata headers
+    if re.match(r'^\s*Page\s+\d+\s+of\s+\d+\s*$', clean_line, re.IGNORECASE):
+        return clean_line.strip()
 
-    # Do NOT touch ASCII / English tokens or Numbers (e.g. Page 1 of 12)
-    if re.search(r'[a-zA-Z0-9]', clean_w):
-        return clean_w
+    has_arabic = any('\u0600' <= c <= '\u06ff' for c in clean_line)
+    if not has_arabic:
+        return clean_line.strip()
 
-    bare_w = re.sub(r'[^\w]', '', clean_w)
-    if len(bare_w) <= 1:
-        return clean_w
+    # Protect English tokens from character reversal
+    placeholders = {}
+    def replacer(match):
+        key = f"__ENG{len(placeholders)}__"
+        placeholders[key] = match.group(0)
+        return key
 
-    # If word ALREADY starts with standard Arabic prefixes, it is ALREADY correct!
-    if (bare_w.startswith('ال') or bare_w.startswith('الم') or bare_w.startswith('سيد') or 
-        bare_w.startswith('مول') or bare_w.startswith('مف') or bare_w.startswith('حس') or 
-        bare_w.startswith('باو') or bare_w.startswith('صاح') or bare_w.startswith('امير')):
-        return clean_w
-
-    # Reverse characters ONLY if word ends with reversed indicators
-    should_reverse = (
-        'ـ' in w or
-        bare_w.endswith('دلا') or bare_w.endswith('لاا') or bare_w.endswith('بال') or
-        bare_w.endswith('يال') or bare_w.endswith('مال') or bare_w.endswith('انلاوم') or
-        bare_w.startswith('هش') or bare_w.startswith('فل') or bare_w.startswith('سف') or
-        bare_w.startswith('ود') or bare_w.startswith('عر') or bare_w.startswith('طلو')
-    )
-
-    if should_reverse:
-        leading = ""
-        trailing = ""
-        core = clean_w
-        while core and core[0] in PUNCTUATION_CHARS:
-            leading += core[0]
-            core = core[1:]
-        while core and core[-1] in PUNCTUATION_CHARS:
-            trailing = core[-1] + trailing
-            core = core[:-1]
+    protected = re.sub(r'[a-zA-Z]+', replacer, clean_line)
+    rev = protected[::-1]
+    
+    for key, val in placeholders.items():
+        rev_key = key[::-1]
+        rev = rev.replace(rev_key, val)
         
-        return leading + core[::-1] + trailing
-
-    return clean_w
+    return rev.strip()
 
 
 def auto_fix_arabic_sentence_flow(text: str) -> str:
@@ -161,20 +147,11 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
     text = sanitize_text(text)
     lines = text.split('\n')
     
-    # Document-level LTR stream detection across first 15 lines
-    doc_is_ltr_stream = False
+    # Check if document has LTR reversed Arabic text (e.g. starts with 'لمضم' or contains 'ـ' or ends with 'دلا')
+    doc_is_reversed = False
     for line in lines[:15]:
-        t = line.strip().split()
-        if not t:
-            continue
-        clean_last = re.sub(r'[^\w]', '', t[-1]) if t else ""
-        clean_first = re.sub(r'[^\w]', '', t[0]) if t else ""
-        
-        if clean_last in ['بقلم', 'الاستاذ', 'الأستاذ'] or t[-1].endswith(':بقلم') or t[-1].endswith('بقلم'):
-            doc_is_ltr_stream = True
-            break
-        if clean_first in ['علي', 'عبد', 'ملا'] and any('بقلم' in w for w in t):
-            doc_is_ltr_stream = True
+        if 'ـ' in line or 'لمضم' in line or 'يـعالدلا' in line or line.strip().endswith('دلا') or line.strip().endswith('لاا'):
+            doc_is_reversed = True
             break
 
     fixed_lines = []
@@ -183,55 +160,10 @@ def auto_fix_arabic_sentence_flow(text: str) -> str:
             fixed_lines.append("")
             continue
 
-        raw_tokens = line.strip().split()
-        if not raw_tokens:
-            fixed_lines.append("")
-            continue
-
-        # Normalize word-internal character reversal & strip Tatweels
-        tokens = [fix_arabic_word_token(w) for w in raw_tokens if w.strip()]
-        tokens = [t for t in tokens if t]
-
-        if len(tokens) <= 1:
-            fixed_lines.append(" ".join(tokens))
-            continue
-
-        first_tok = tokens[0]
-        last_tok = tokens[-1]
-        
-        clean_last = re.sub(r'[^\w]', '', last_tok)
-        clean_first = re.sub(r'[^\w]', '', first_tok)
-
-        line_is_reversed = (
-            doc_is_ltr_stream or
-            clean_last in ['بقلم', 'الاستاذ', 'الأستاذ'] or
-            last_tok.endswith('بقلم') or last_tok.endswith(':') or
-            first_tok in ['،', '؛', '.', ':', '،'] or
-            first_tok.startswith('،') or first_tok.startswith('؛') or
-            (last_tok.endswith('،') or last_tok.endswith('؛') or last_tok.endswith(','))
-        )
-
-        if line_is_reversed:
-            tokens = list(reversed(tokens))
-
-        cleaned_tokens = []
-        for tok in tokens:
-            leading_punc = ""
-            core = tok
-            while len(core) > 1 and core[0] in PUNCTUATION_CHARS:
-                leading_punc += core[0]
-                core = core[1:]
-
-            cleaned_tokens.append(core + leading_punc)
-
-        fixed_line = " ".join(cleaned_tokens)
-        fixed_line = re.sub(r'\s+([،؛.:!?])', r'\1', fixed_line)
-        fixed_line = re.sub(r'\s+', ' ', fixed_line).strip()
-        
-        if fixed_line and fixed_line[0] in ['،', '؛'] and len(fixed_line.split()) > 2:
-            fixed_line = fixed_line[1:].strip() + ' ' + fixed_line[0]
-
-        fixed_lines.append(fixed_line)
+        if doc_is_reversed or 'ـ' in line or 'لمضم' in line or line.strip().endswith('دلا'):
+            fixed_lines.append(fix_reversed_arabic_line(line))
+        else:
+            fixed_lines.append(line.strip())
 
     return "\n".join(fixed_lines)
 
